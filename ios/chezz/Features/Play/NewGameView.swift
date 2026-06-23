@@ -91,11 +91,12 @@ struct NewGameView: View {
                     ForEach(AIDifficulty.all) { d in
                         Button { difficulty = d } label: {
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(d.name).font(.chezzCallout).foregroundStyle(difficulty == d ? Palette.onAccent : Palette.textPrimary)
-                                Text("~\(d.approxElo)").font(.chezzCaption2).foregroundStyle(difficulty == d ? Palette.onAccent.opacity(0.8) : Palette.textSecondary)
+                                Text(d.name).font(.chezzCallout).lineLimit(1).foregroundStyle(difficulty == d ? Palette.onAccent : Palette.textPrimary)
+                                Text("~\(d.approxElo)").font(.chezzCaption2).lineLimit(1).foregroundStyle(difficulty == d ? Palette.onAccent.opacity(0.8) : Palette.textSecondary)
                             }
+                            .fixedSize(horizontal: true, vertical: false)
                             .padding(.horizontal, Spacing.sm).padding(.vertical, Spacing.xs)
-                            .frame(width: 92, alignment: .leading)
+                            .frame(minWidth: 80, alignment: .leading)
                             .background(difficulty == d ? Palette.mint : Palette.surface2,
                                         in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous))
                         }
