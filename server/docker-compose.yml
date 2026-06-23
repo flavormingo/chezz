@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: chezz
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chezz}
+      POSTGRES_DB: chezz
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U chezz -d chezz']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Not published to the host; only the app reaches it over the compose network.
+
+  app:
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://chezz:${POSTGRES_PASSWORD:-chezz}@postgres:5432/chezz
+      PORT: 3000
+      UPLOAD_DIR: /app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - '3000'
+    volumes:
+      - uploads:/app/uploads
+
+  # One-shot migration runner (profiles: tools means 'up' skips it; run it explicitly).
+  migrate:
+    build:
+      context: .
+      target: build
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://chezz:${POSTGRES_PASSWORD:-chezz}@postgres:5432/chezz
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: ['tools']
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+  uploads:
