@@ -36,7 +36,9 @@ final class GameViewModel: Identifiable {
 
     func stop() {
         aiTask?.cancel()
-        Task { await engine.stopSearch() }
+        // Only stop the shared engine if THIS game has a search in flight; a finished game
+        // firing a stray .stop could otherwise clip a rematch's fresh search on the same engine.
+        if thinking { Task { await engine.stopSearch() } }
     }
 
     func tap(_ sq: Square) { game.tap(sq) }
@@ -90,8 +92,8 @@ final class GameViewModel: Identifiable {
         aiTask = Task { [weak self] in
             guard let self else { return }
             let uci = await engine.bestMove(forFEN: fen, difficulty: difficulty)
-            if Task.isCancelled || game.isGameOver { return }
             thinking = false
+            if Task.isCancelled || game.isGameOver { return }
             if let uci, game.applyUCIMove(uci) { return }
             // Nets missing (dev build): fall back to a random legal move so the game still plays.
             engineUnavailable = true
