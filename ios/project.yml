@@ -13,7 +13,7 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: "G3G26ZXKJJ"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
@@ -50,7 +50,7 @@ targets:
         CFBundleDisplayName: Chezz
         CFBundleName: Chezz
         CFBundleShortVersionString: "1.0.0"
-        CFBundleVersion: "1"
+        CFBundleVersion: "2"
         LSRequiresIPhoneOS: true
         UIUserInterfaceStyle: Dark
         UIStatusBarStyle: UIStatusBarStyleLightContent
@@ -60,14 +60,9 @@ targets:
           UIApplicationSupportsMultipleScenes: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
-        UISupportedInterfaceOrientations~ipad:
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationPortraitUpsideDown
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
         ITSAppUsesNonExemptEncryption: false
         NSContactsUsageDescription: >-
-          chezz matches your contacts privately to help you find friends who
+          Chezz matches your contacts privately to help you find friends who
           already play. Your phone numbers are only matched in a hashed form
           and are never shared or shown to anyone.
     entitlements:
@@ -81,7 +76,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: digital.mazz.chezz
         GENERATE_INFOPLIST_FILE: NO
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ENABLE_PREVIEWS: YES
