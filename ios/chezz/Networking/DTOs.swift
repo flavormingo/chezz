@@ -74,6 +74,7 @@ struct DiscoveryPhoneBody: Encodable { let phoneNumber: String }
 struct AppleIdTokenBody: Encodable { let token: String; let nonce: String }
 struct AppleSignInBody: Encodable { let provider = "apple"; let idToken: AppleIdTokenBody }
 struct UpdateUserBody: Encodable { let username: String; let displayUsername: String }
+struct UsernameCheckBody: Encodable { let username: String }
 struct ContactsBody: Encodable { let phoneNumbers: [String] }
 struct ToUserBody: Encodable { let toUserId: String }
 struct CreateChallengeBody: Encodable {
