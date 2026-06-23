@@ -236,6 +236,8 @@ struct FriendsView: View {
     private func coverView(_ route: FriendRoute) -> some View {
         switch route {
         case let .online(gameId):
+            // .id keyed on gameId: when a push tap swaps an open cover from one game to
+            // another, force a fresh OnlineGameView/socket instead of reusing the old @State vm.
             OnlineGameView(
                 vm: OnlineGameViewModel(gameId: gameId, myUserId: myId, settings: settings),
                 onReview: { game in
@@ -246,8 +248,10 @@ struct FriendsView: View {
                         whiteName: "White", blackName: "Black"))
                 },
                 onExit: { self.route = nil; Task { await vm.load() } })
+                .id(gameId)
         case let .review(rvm):
             ReviewView(vm: rvm, onExit: { self.route = nil })
+                .id(rvm.id)
         }
     }
 
