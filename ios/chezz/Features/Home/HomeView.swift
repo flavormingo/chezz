@@ -37,6 +37,21 @@ struct HomeView: View {
                 .presentationDetents([.large])
         }
         .fullScreenCover(item: $route) { route in cover(route) }
+        .task { autoReviewIfRequested() }
+    }
+
+    private func autoReviewIfRequested() {
+        #if DEBUG
+        // UI-test hook (-chezz-autoreview): jump straight into a Game Review of a canned
+        // Scandinavian game so the review explainers can be exercised without a live game.
+        guard route == nil, ProcessInfo.processInfo.arguments.contains("-chezz-autoreview") else { return }
+        let g = ChessGame(timeControl: .untimed, opponent: .localHuman, humanColor: nil)
+        for uci in ["e2e4", "d7d5", "e4d5", "d8d5", "b1c3", "d5a5", "d2d4", "g8f6", "g1f3", "c7c6"] {
+            _ = g.applyUCIMove(uci)
+        }
+        route = .review(ReviewViewModel(history: g.history, startFEN: Position.standard.fen,
+                                        result: nil, whiteName: "White", blackName: "Black"))
+        #endif
     }
 
     private var hero: some View {
@@ -140,12 +155,16 @@ struct HomeView: View {
     private func cover(_ route: Route) -> some View {
         switch route {
         case let .game(vm):
+            // .id forces a fresh GameView (and its @State vm) when the route's model changes;
+            // a cover already presented keeps the same view otherwise, so rematch would no-op.
             GameView(vm: vm,
                      onReview: { _ in recordIfNeeded(vm); self.route = .review(makeReview(from: vm)) },
                      onRematch: { recordIfNeeded(vm); self.route = .game(rematch(vm)) },
                      onExit: { recordIfNeeded(vm); self.route = nil })
+                .id(vm.id)
         case let .review(rvm):
             ReviewView(vm: rvm, onExit: { self.route = nil })
+                .id(rvm.id)
         }
     }
 
