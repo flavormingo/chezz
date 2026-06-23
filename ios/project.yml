@@ -1,0 +1,140 @@
+name: chezz
+# Generated with XcodeGen. chezz/ is a synced folder, so new .swift files are picked up automatically; re-run xcodegen only when this file changes.
+
+options:
+  bundleIdPrefix: digital.mazz
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: "G3G26ZXKJJ"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    # dwarf only (no dSYM): dsymutil fails on the huge bundled engine binary. Use dwarf-with-dsym only for a final App Store archive.
+    DEBUG_INFORMATION_FORMAT: dwarf
+
+packages:
+  ChessKit:
+    url: https://github.com/chesskit-app/chesskit-swift
+    exactVersion: "0.17.0"
+  ChessKitEngine:
+    url: https://github.com/chesskit-app/chesskit-engine
+    exactVersion: "0.7.0"
+
+targets:
+  chezz:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: chezz
+        type: syncedFolder
+        excludes:
+          - "Info.plist"
+          - "chezz.entitlements"
+          - "**/*.md"
+    dependencies:
+      - package: ChessKit
+      - package: ChessKitEngine
+    info:
+      path: chezz/Info.plist
+      properties:
+        CFBundleDisplayName: Chezz
+        CFBundleName: Chezz
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UIUserInterfaceStyle: Dark
+        UIStatusBarStyle: UIStatusBarStyleLightContent
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        ITSAppUsesNonExemptEncryption: false
+        NSContactsUsageDescription: >-
+          chezz matches your contacts privately to help you find friends who
+          already play. Your phone numbers are only matched in a hashed form
+          and are never shared or shown to anyone.
+    entitlements:
+      path: chezz/chezz.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
+        # Resolves per-config from APS_ENVIRONMENT below: Debug→sandbox, Release→production.
+        aps-environment: $(APS_ENVIRONMENT)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: digital.mazz.chezz
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+        SUPPORTS_MACCATALYST: NO
+      configs:
+        Debug:
+          APS_ENVIRONMENT: development
+        Release:
+          APS_ENVIRONMENT: production
+  chezzTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: chezzTests
+        type: syncedFolder
+    dependencies:
+      - target: chezz
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: digital.mazz.chezz.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  chezzUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: chezzUITests
+    dependencies:
+      - target: chezz
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: digital.mazz.chezz.uitests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  chezz:
+    # Run uses Release so the engine is optimized (much faster AI/Review); switch to Debug for source-level debugging.
+    build:
+      targets:
+        chezz: all
+    run:
+      config: Release
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - chezzTests
+        - chezzUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
