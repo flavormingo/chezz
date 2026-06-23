@@ -1,0 +1,9 @@
+node_modules
+dist
+drizzle
+.env
+.env.*
+!.env.example
+*.log
+.git
+.DS_Store
