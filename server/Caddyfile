@@ -1,0 +1,15 @@
+{$DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy app:3000 {
+		# read_timeout 0 keeps long-lived /ws WebSocket connections from being closed on idle.
+		transport http {
+			read_timeout 0
+			write_timeout 0
+		}
+
+		# Forward the real client IP so the app's per-IP rate limiting works.
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+	}
+}
