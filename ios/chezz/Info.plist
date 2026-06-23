@@ -19,13 +19,13 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSContactsUsageDescription</key>
-	<string>chezz matches your contacts privately to help you find friends who already play. Your phone numbers are only matched in a hashed form and are never shared or shown to anyone.</string>
+	<string>Chezz matches your contacts privately to help you find friends who already play. Your phone numbers are only matched in a hashed form and are never shared or shown to anyone.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -41,13 +41,6 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIUserInterfaceStyle</key>
 	<string>Dark</string>
