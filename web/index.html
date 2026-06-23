@@ -1,129 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#6600ff">
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Chezz</title>
-  <link rel="icon" href="icon.svg">
-  <style>
-    :root { --ink: #14161b; --muted: #6b7280; --accent: #6600ff; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { -webkit-text-size-adjust: 100%; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(90% 70% at 50% 118%, rgba(102, 0, 255, 0.10), transparent 60%),
-        #ffffff;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px;
-    }
-
-    main {
-      width: 100%;
-      max-width: 460px;
-      text-align: center;
-      animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-    }
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(14px); }
-      to { opacity: 1; transform: none; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      main { animation: none; }
-    }
-
-    .icon {
-      width: 104px;
-      height: 104px;
-      filter: drop-shadow(0 14px 30px rgba(102, 0, 255, 0.28));
-      transition: transform 0.25s ease;
-    }
-    .icon:hover { transform: translateY(-3px) scale(1.02); }
-
-    h1 {
-      margin-top: 24px;
-      font-size: 44px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-    }
-
-    .quote {
-      margin-top: 18px;
-      font-size: 16px;
-      color: var(--muted);
-      font-style: italic;
-    }
-    .quote cite { display: block; margin-top: 6px; font-style: normal; }
-
-    ul {
-      margin: 36px auto 0;
-      list-style: none;
-      text-align: left;
-      display: inline-block;
-    }
-    li {
-      position: relative;
-      padding-left: 20px;
-      margin-top: 14px;
-      font-size: 16px;
-    }
-    li::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0.62em;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-    }
-    li strong { font-weight: 600; color: var(--accent); }
-
-    .footer { margin-top: 44px; }
-    .badge {
-      height: 52px;
-      width: auto;
-      filter: drop-shadow(0 6px 16px rgba(20, 22, 27, 0.18));
-      transition: transform 0.2s ease;
-    }
-    .badge:hover { transform: translateY(-2px); }
-
-    .made { margin-top: 18px; font-size: 14px; color: var(--muted); }
-    .made a {
-      color: var(--accent);
-      font-weight: 600;
-      text-decoration: none;
-      border-bottom: 1px solid transparent;
-      transition: border-color 0.2s ease;
-    }
-    .made a:hover { border-bottom-color: var(--accent); }
-  </style>
+  <meta name="description" content="Chezz is the open source chess app for cool cats, made for iOS. Play a friend across the world, pass-and-play across the table or take on a Stockfish engine that scales from gentle to brutal.">
+  <meta name="author" content="mazz.digital">
+  <link rel="canonical" href="https://chezz.lol/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Chezz">
+  <meta property="og:title" content="Chezz">
+  <meta property="og:description" content="Chezz is the open source chess app for cool cats, made for iOS. Play a friend across the world, pass-and-play across the table or take on a Stockfish engine that scales from gentle to brutal.">
+  <meta property="og:url" content="https://chezz.lol/">
+  <meta property="og:image" content="https://chezz.lol/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Chezz">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Chezz">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+  <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <main>
-    <img class="icon" src="icon.svg" alt="Chezz" width="104" height="104">
+    <img class="icon" src="img/icon.svg" alt="Chezz" width="104" height="104">
     <h1>Chezz</h1>
     <p class="quote">
       "You can't achieve anything in life without a small amount of sacrifice."
       <cite>—Shakira</cite>
     </p>
-    <ul>
+    <ul class="features">
       <li><strong>Play a friend across the world</strong>, or across the table</li>
       <li><strong>Blitz the clock down to the wire</strong>, or trade moves over days</li>
       <li><strong>Become a chess master</strong> with unlimited detailed game reviews</li>
       <li><strong>Blunder in style</strong> with an ever expanding selection of customization features</li>
     </ul>
     <div class="footer">
-      <img class="badge" src="app-store-badge.svg" alt="Download on the App Store">
-      <p class="made">Made with love by <a href="https://mazz.digital" target="_blank" rel="noopener">mazz.digital</a></p>
+      <img class="badge" src="img/app-store-badge.svg" alt="Download on the App Store">
+      <p class="made">Made with love by <a class="link" href="https://mazz.digital" target="_blank" rel="noopener">mazz.digital</a></p>
+      <p class="legal"><a class="link" href="privacy/">Privacy Policy</a></p>
     </div>
   </main>
 </body>
