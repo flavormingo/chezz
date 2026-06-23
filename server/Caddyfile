@@ -13,3 +13,14 @@
 		header_up X-Forwarded-For {remote_host}
 	}
 }
+
+# Marketing site + privacy policy, served as static files from the mounted web/ folder.
+chezz.lol {
+	encode zstd gzip
+	root * /srv/web
+	file_server
+}
+
+www.chezz.lol {
+	redir https://chezz.lol{uri} permanent
+}
