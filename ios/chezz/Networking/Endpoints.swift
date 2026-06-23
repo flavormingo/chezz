@@ -16,7 +16,7 @@ extension APIClient {
         try await postVoid("/api/auth/sign-in/social", body: AppleSignInBody(idToken: .init(token: idToken, nonce: nonce)))
     }
     func usernameAvailable(_ username: String) async throws -> Bool {
-        try await get("/api/auth/username/available?username=\(q(username))", as: UsernameAvailableResponse.self).available
+        try await post("/api/auth/is-username-available", body: UsernameCheckBody(username: username), as: UsernameAvailableResponse.self).available
     }
     func updateUsername(_ username: String) async throws {
         try await postVoid("/api/auth/update-user", body: UpdateUserBody(username: username, displayUsername: username))
