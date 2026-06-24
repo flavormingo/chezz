@@ -91,7 +91,11 @@ final class GameViewModel: Identifiable {
         let fen = game.board.position.fen
         aiTask = Task { [weak self] in
             guard let self else { return }
+            let started = Date()
             let uci = await engine.bestMove(forFEN: fen, difficulty: difficulty)
+            // Pad the engine's (often near-instant) reply up to a difficulty-scaled floor so the
+            // opponent appears to think and spends a fair share of its own clock on its turn.
+            await Self.humanizeThinking(since: started, baseMs: difficulty.thinkMs)
             thinking = false
             if Task.isCancelled || game.isGameOver { return }
             if let uci, game.applyUCIMove(uci) { return }
@@ -99,6 +103,13 @@ final class GameViewModel: Identifiable {
             engineUnavailable = true
             if let m = randomLegalMove() { game.attemptMove(from: m.0, to: m.1, promotion: .queen) }
         }
+    }
+
+    private static func humanizeThinking(since start: Date, baseMs: Int) async {
+        let target = Double(baseMs) * Double.random(in: 0.85...1.15)
+        let remainingMs = target - Date().timeIntervalSince(start) * 1000
+        guard remainingMs > 0 else { return }
+        try? await Task.sleep(nanoseconds: UInt64(remainingMs * 1_000_000))
     }
 
     private func randomLegalMove() -> (Square, Square)? {
