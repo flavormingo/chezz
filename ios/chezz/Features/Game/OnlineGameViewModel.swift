@@ -53,6 +53,7 @@ final class OnlineGameViewModel: Identifiable {
     var isMyTurn: Bool { statusActive && turn == mySide && !awaitingServer }
 
     func start() async {
+        settings.recordPlayedToday()
         streamTask?.cancel()
         clockTask?.cancel()
         watchdog?.cancel()
