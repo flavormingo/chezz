@@ -41,11 +41,14 @@ final class SessionStore {
         await refresh()
     }
 
-    func setDiscoveryPhone(_ phoneNumber: String) async throws {
-        currentUser = try await api.setDiscoveryPhone(phoneNumber).toUser()
+    func setDiscoveryPhone(_ phoneNumber: String, region: String?) async throws {
+        currentUser = try await api.setDiscoveryPhone(phoneNumber, region: region).toUser()
     }
     func clearDiscoveryPhone() async throws {
         try await api.clearDiscoveryPhone()
+        // Flip locally so a transient failure of the follow-up refresh can't leave the flag stale.
+        currentUser?.hasDiscoveryPhone = false
+        currentUser?.discoverable = false
         await refresh()
     }
 
