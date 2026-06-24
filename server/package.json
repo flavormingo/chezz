@@ -21,6 +21,7 @@
     "chess.js": "^1.4.0",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.26",
+    "libphonenumber-js": "^1.13.7",
     "postgres": "^3.4.9",
     "resend": "^4.0.0",
     "ws": "^8.21.0"
