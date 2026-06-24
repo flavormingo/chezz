@@ -15,6 +15,13 @@ const socialProviders =
           clientSecret: appleClientSecret,
           // Mandatory for native sign-in: the id token's `aud` is the bundle id, not the Services ID.
           appBundleIdentifier: env.apple.appBundleId,
+          // Apple returns the email only on the FIRST authorization; later sign-ins omit it, which
+          // BetterAuth rejects (USER_EMAIL_NOT_FOUND -> 401 -> the client's "Please sign in again").
+          // Synthesize a STABLE email from the Apple subject so repeat sign-ins resolve to the same
+          // account (the account is keyed by `sub`); the real email is still used when present.
+          mapProfileToUser: (profile: { sub: string; email?: string }) => ({
+            email: profile.email ?? `${profile.sub}@appleid.chezz.lol`,
+          }),
         },
       }
     : {};
