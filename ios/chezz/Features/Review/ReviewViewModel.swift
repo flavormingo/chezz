@@ -47,24 +47,36 @@ final class ReviewViewModel: Identifiable {
 
     private let engine = ReviewEngine()
 
+    // cacheKey: when set (an archived game's id), the computed review is cached and reused so
+    // re-opening the same game shows the identical result instead of re-analyzing each time.
+    let cacheKey: UUID?
+
     init(history: [PlayedMove], startFEN: String, result: ResultSummary?,
-         whiteName: String, blackName: String, perspective: Side = .white) {
+         whiteName: String, blackName: String, perspective: Side = .white, cacheKey: UUID? = nil) {
         self.history = history
         self.startFEN = startFEN
         self.result = result
         self.whiteName = whiteName
         self.blackName = blackName
         self.perspective = perspective
+        self.cacheKey = cacheKey
     }
 
     var plyCount: Int { history.count }
 
     func load() async {
+        if let cacheKey, let cached = ReviewCache.shared.review(for: cacheKey) {
+            review = cached
+            loading = false
+            currentPly = 0
+            return
+        }
         let r = await engine.run(history: history, startFEN: startFEN, result: result,
                                  progress: { p in Task { @MainActor in self.progress = p } })
         review = r
         loading = false
         currentPly = 0
+        if let cacheKey { ReviewCache.shared.save(r, for: cacheKey) }
     }
 
     var displayFEN: String { currentPly == 0 ? startFEN : history[currentPly - 1].fenAfter }
