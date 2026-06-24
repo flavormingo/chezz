@@ -33,8 +33,6 @@ actor StockfishEngine {
     private static let bigNet = "nn-1111cefa1111"
     private static let smallNet = "nn-37f18f62d772"
 
-    private var threadCount: Int { max(1, min(4, ProcessInfo.processInfo.activeProcessorCount - 1)) }
-
     var isAvailable: Bool { didStart && netsAvailable }
 
     func start() async {
@@ -53,13 +51,16 @@ actor StockfishEngine {
             await engine.set(loggingEnabled: true)
         }
 
-        await engine.start(coreCount: threadCount, multipv: 1)
+        await engine.start(coreCount: 1, multipv: 1)
         // start() returns before the uci→readyok handshake; Engine.send() silently drops commands until the engine is running, so wait first.
         await waitUntilRunning()
 
         if let big { await engine.send(command: .setoption(id: "EvalFile", value: big)) }
         if let small { await engine.send(command: .setoption(id: "EvalFileSmall", value: small)) }
-        await engine.send(command: .setoption(id: "Threads", value: "\(threadCount)"))
+        // Single thread on purpose: multi-threaded Stockfish search is non-deterministic, which made
+        // the same game review to different evals/accuracy each time. One thread keeps reviews
+        // reproducible; strength is unaffected at the move-times/Elo caps the app uses.
+        await engine.send(command: .setoption(id: "Threads", value: "1"))
         await engine.send(command: .setoption(id: "Hash", value: "64"))
         await engine.send(command: .isready)
         startConsumer()
@@ -97,9 +98,13 @@ actor StockfishEngine {
         guard netsAvailable else { return [] }
         await acquire()
         defer { release() }
+        // Clear the transposition table before each position so a game reviews to identical evals
+        // every run. (The engine is single-threaded, see performStart, which makes the search itself
+        // deterministic; multi-threaded Stockfish is not, which caused reviews to vary run to run.)
         await engine.send(command: .setoption(id: "UCI_LimitStrength", value: "false"))
         await engine.send(command: .setoption(id: "Skill Level", value: "20"))
         await engine.send(command: .setoption(id: "MultiPV", value: "\(multipv)"))
+        await engine.send(command: .ucinewgame)
         await engine.send(command: .position(.fen(fen), moves: nil))
         lines = [:]
         let result = await withCheckedContinuation { (cont: CheckedContinuation<[AnalysisLine], Never>) in
