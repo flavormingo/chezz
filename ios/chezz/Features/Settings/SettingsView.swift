@@ -7,16 +7,21 @@ struct SettingsView: View {
         @Bindable var settings = settings
         List {
             Section("Appearance") {
+                // .id on the active theme forces both pickers to re-render when the accent changes,
+                // so their value text recolors immediately (SwiftUI otherwise caches the tint until
+                // the view is rebuilt, e.g. by leaving and returning to Settings).
                 Picker("Theme", selection: $settings.appThemeID) {
                     ForEach(AppTheme.all) { theme in
                         Text(theme.name).tag(theme.id)
                     }
                 }
+                .id(settings.appThemeID)
                 Picker("Board", selection: $settings.boardThemeID) {
                     ForEach(BoardTheme.all) { theme in
                         Text(theme.name).tag(theme.id)
                     }
                 }
+                .id(settings.appThemeID)
                 Toggle("Show legal moves", isOn: $settings.showLegalMoves)
                 Toggle("Show coordinates", isOn: $settings.showCoordinates)
             }
