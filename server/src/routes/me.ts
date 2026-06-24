@@ -31,8 +31,8 @@ meRoutes.patch('/', async (c) => {
 
   if (typeof body.username === 'string') {
     const username = body.username.toLowerCase().trim();
-    if (!/^[a-z0-9_.]{3,20}$/.test(username)) {
-      apiError(400, 'invalid_username', 'Username must be 3–20 chars of [a-z0-9_.].');
+    if (!/^[a-z0-9_.]{2,20}$/.test(username)) {
+      apiError(400, 'invalid_username', 'Username must be 2–20 chars of [a-z0-9_.].');
     }
     patch.username = username;
     patch.displayUsername = body.username.trim();
