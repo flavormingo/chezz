@@ -152,7 +152,7 @@ struct HomeView: View {
             Image(systemName: resultIcon(g)).foregroundStyle(resultColor(g))
                 .frame(width: 32, height: 32).background(Palette.surface2, in: Circle())
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(g.whiteName) vs \(g.blackName)").font(.chezzCallout).foregroundStyle(Palette.textPrimary).lineLimit(1)
+                Text(g.humanColor == nil ? "Pass and Play" : "\(g.whiteName) vs \(g.blackName)").font(.chezzCallout).foregroundStyle(Palette.textPrimary).lineLimit(1)
                 Text("\(g.timeControl.displayName) · \(g.termination.label)").font(.chezzCaption).foregroundStyle(Palette.textSecondary)
             }
             Spacer()
