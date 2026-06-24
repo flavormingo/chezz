@@ -6,7 +6,10 @@ enum ContactsService {
         CNContactStore.authorizationStatus(for: .contacts)
     }
 
-    static func requestAndFetchE164() async throws -> [String] {
+    // Raw phone strings straight from the address book. The server normalizes each to E.164 using the
+    // caller's region, so any format works ("(415) 555-2671", "+1 415...", "07911 123456"); doing it
+    // server-side with libphonenumber is far more accurate than guessing +1 on-device.
+    static func requestAndFetchNumbers() async throws -> [String] {
         let store = CNContactStore()
         let granted: Bool = await withCheckedContinuation { cont in
             store.requestAccess(for: .contacts) { ok, _ in cont.resume(returning: ok) }
@@ -21,7 +24,8 @@ enum ContactsService {
                     var numbers = Set<String>()
                     try store.enumerateContacts(with: request) { contact, _ in
                         for pn in contact.phoneNumbers {
-                            if let e = e164(pn.value.stringValue) { numbers.insert(e) }
+                            let s = pn.value.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                            if !s.isEmpty { numbers.insert(s) }
                         }
                     }
                     cont.resume(returning: Array(numbers))
@@ -32,14 +36,6 @@ enum ContactsService {
         }
     }
 
-    // Best-effort; assumes +1 (US/CA) when no country code is present.
-    static func e164(_ raw: String, defaultCountryCode: String = "1") -> String? {
-        let trimmed = raw.trimmingCharacters(in: .whitespaces)
-        let digits = trimmed.filter(\.isNumber)
-        guard !digits.isEmpty else { return nil }
-        if trimmed.hasPrefix("+") { return "+" + digits }
-        if digits.count == 10 { return "+\(defaultCountryCode)\(digits)" }
-        if digits.count == 11, digits.hasPrefix("1") { return "+\(digits)" }
-        return "+\(digits)"
-    }
+    // The device's region (e.g. "US"), used as the default country for national-format numbers.
+    static var region: String? { Locale.current.region?.identifier }
 }
