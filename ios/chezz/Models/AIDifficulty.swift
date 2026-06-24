@@ -12,6 +12,15 @@ struct AIDifficulty: Identifiable, Hashable, Codable {
     var moveTimeMs: Int
     var depth: Int?
 
+    // Humanizing pre-move delay (ms): the engine often replies almost instantly, so we pad the
+    // move up to this floor. Weaker bots "deliberate" a touch longer than stronger ones; scaled
+    // smoothly from ~1.3s at the bottom to ~0.6s at full strength off approxElo.
+    var thinkMs: Int {
+        let lo = 800.0, hi = 3190.0, slow = 1300.0, fast = 600.0
+        let t = min(1, max(0, (Double(approxElo) - lo) / (hi - lo)))
+        return Int(slow - t * (slow - fast))
+    }
+
     static let beginner = AIDifficulty(
         id: "beginner", name: "Beginner", blurb: "Just learning the moves",
         approxElo: 800, limitStrength: false, uciElo: nil, skillLevel: 0, moveTimeMs: 50, depth: 1)
