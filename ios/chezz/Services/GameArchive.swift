@@ -17,12 +17,14 @@ final class GameArchive {
         load()
     }
 
-    func record(_ game: ChessGame, whiteName: String, blackName: String) {
-        guard game.isGameOver, !game.history.isEmpty else { return }
+    @discardableResult
+    func record(_ game: ChessGame, whiteName: String, blackName: String) -> ArchivedGame? {
+        guard game.isGameOver, !game.history.isEmpty else { return nil }
         let archived = ArchivedGame(from: game, whiteName: whiteName, blackName: blackName)
         games.insert(archived, at: 0)
         if games.count > limit { games = Array(games.prefix(limit)) }
         persist()
+        return archived
     }
 
     func delete(_ game: ArchivedGame) {
