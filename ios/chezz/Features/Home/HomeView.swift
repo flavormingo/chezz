@@ -8,7 +8,9 @@ struct HomeView: View {
 
     @State private var showNewGame = false
     @State private var route: Route?
-    @State private var recorded: Set<UUID> = []
+    // Maps a finished game's view-model id to the archived game's id, so the post-game review and the
+    // later recent-games review share one cache key (identical, cached analysis instead of two).
+    @State private var archivedIDs: [UUID: UUID] = [:]
 
     enum Route: Identifiable {
         case game(GameViewModel)
@@ -183,7 +185,7 @@ struct HomeView: View {
             // .id forces a fresh GameView (and its @State vm) when the route's model changes;
             // a cover already presented keeps the same view otherwise, so rematch would no-op.
             GameView(vm: vm,
-                     onReview: { _ in recordIfNeeded(vm); self.route = .review(makeReview(from: vm)) },
+                     onReview: { _ in let key = recordIfNeeded(vm); self.route = .review(makeReview(from: vm, cacheKey: key)) },
                      onRematch: { recordIfNeeded(vm); self.route = .game(rematch(vm)) },
                      onExit: { recordIfNeeded(vm); self.route = nil })
                 .id(vm.id)
@@ -204,13 +206,13 @@ struct HomeView: View {
                       humanColor: vm.game.humanColor?.opposite, settings: settings)
     }
 
-    private func makeReview(from vm: GameViewModel) -> ReviewViewModel {
+    private func makeReview(from vm: GameViewModel, cacheKey: UUID?) -> ReviewViewModel {
         let g = vm.game
         return ReviewViewModel(history: g.history,
                                startFEN: g.history.first?.fenBefore ?? Position.standard.fen,
                                result: ResultSummary(outcome: g.outcome, termination: g.termination ?? .checkmate),
                                whiteName: playerName(.white, vm), blackName: playerName(.black, vm),
-                               perspective: g.humanColor ?? .white)
+                               perspective: g.humanColor ?? .white, cacheKey: cacheKey)
     }
 
     private func reviewArchived(_ g: ArchivedGame) {
@@ -219,10 +221,13 @@ struct HomeView: View {
                                         perspective: g.humanColor ?? .white, cacheKey: g.id))
     }
 
-    private func recordIfNeeded(_ vm: GameViewModel) {
-        guard vm.game.isGameOver, !recorded.contains(vm.id) else { return }
-        recorded.insert(vm.id)
-        archive.record(vm.game, whiteName: playerName(.white, vm), blackName: playerName(.black, vm))
+    @discardableResult
+    private func recordIfNeeded(_ vm: GameViewModel) -> UUID? {
+        guard vm.game.isGameOver else { return nil }
+        if let existing = archivedIDs[vm.id] { return existing }
+        guard let archived = archive.record(vm.game, whiteName: playerName(.white, vm), blackName: playerName(.black, vm)) else { return nil }
+        archivedIDs[vm.id] = archived.id
+        return archived.id
     }
 
     private func playerName(_ side: Side, _ vm: GameViewModel) -> String {
