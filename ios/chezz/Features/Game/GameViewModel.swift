@@ -30,6 +30,7 @@ final class GameViewModel: Identifiable {
     var bottomSide: Side { perspective }
 
     func start() {
+        settings.recordPlayedToday()
         game.begin()
         maybeAIMove()
     }
