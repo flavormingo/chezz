@@ -9,10 +9,12 @@ struct UserProfile: Identifiable, Codable, Hashable {
     var isFriend: Bool
     var discoverable: Bool
     var imageURL: String?
+    // True once the user has added a discoverable phone number; drives the honest "Findable" state.
+    var hasDiscoveryPhone: Bool
 
     init(id: String, username: String, displayName: String = "", rating: Int = 1200,
          avatarColor: String = "#34E5A1", isFriend: Bool = false, discoverable: Bool = true,
-         imageURL: String? = nil) {
+         imageURL: String? = nil, hasDiscoveryPhone: Bool = false) {
         self.id = id
         self.username = username
         self.displayName = displayName
@@ -21,6 +23,7 @@ struct UserProfile: Identifiable, Codable, Hashable {
         self.isFriend = isFriend
         self.discoverable = discoverable
         self.imageURL = imageURL
+        self.hasDiscoveryPhone = hasDiscoveryPhone
     }
 
     var name: String {
