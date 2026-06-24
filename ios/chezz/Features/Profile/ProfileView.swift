@@ -4,6 +4,7 @@ import UIKit
 
 struct ProfileView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(AppSettings.self) private var settings
     @State private var showAuth = false
     @State private var showDiscovery = false
     @State private var showEditProfile = false
@@ -106,7 +107,13 @@ struct ProfileView: View {
             }
             .buttonStyle(.plain)
             Text(user.name).font(.chezzTitle).foregroundStyle(Palette.textPrimary)
-            Text("@\(user.username)").font(.chezzSubhead).foregroundStyle(Palette.textSecondary)
+            HStack(spacing: 5) {
+                Image(systemName: "flame.fill")
+                    .foregroundStyle(settings.currentStreak > 0 ? .orange : Palette.textTertiary)
+                Text(settings.currentStreak > 0 ? "\(settings.currentStreak) day streak" : "No streak yet")
+                    .foregroundStyle(Palette.textSecondary)
+            }
+            .font(.chezzSubhead)
             Text("Rating \(user.rating)").font(.chezzCallout).foregroundStyle(Palette.mint)
             HStack(spacing: Spacing.sm) {
                 Button("Edit Profile") { showEditProfile = true }
