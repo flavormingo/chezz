@@ -10,6 +10,8 @@ struct FriendsView: View {
     @State private var searchText = ""
     @State private var challengeTarget: UserProfile?
     @State private var route: FriendRoute?
+    @State private var showDiscovery = false
+    @State private var pendingContactMatch = false
 
     enum FriendRoute: Identifiable {
         case online(String)
@@ -37,13 +39,34 @@ struct FriendsView: View {
             }
         }
         .fullScreenCover(item: $route) { route in coverView(route) }
+        .sheet(isPresented: $showDiscovery, onDismiss: {
+            // Cancelling without adding a number must not leave a match armed to fire later from another tab.
+            if session.currentUser?.hasDiscoveryPhone != true { pendingContactMatch = false }
+        }) { DiscoveryPhoneSheet() }
         .alert("Something went wrong", isPresented: Binding(
             get: { vm.error != nil }, set: { if !$0 { vm.error = nil } })) {
             Button("OK", role: .cancel) { vm.error = nil }
         } message: { Text(vm.error ?? "") }
         .task(id: session.isSignedIn) { if session.isSignedIn { await vm.load() } }
         .onChange(of: push.pendingGameId) { _, id in openPushGame(id) }
+        // Once the user adds their number from the prompt, run the match they originally asked for.
+        .onChange(of: session.currentUser?.hasDiscoveryPhone) { _, has in
+            if has == true, pendingContactMatch {
+                pendingContactMatch = false
+                Task { await vm.matchContacts() }
+            }
+        }
         .onAppear { openPushGame(push.pendingGameId) }
+    }
+
+    private func startContactMatch() {
+        // Finding friends is reciprocal: you must be findable too. Prompt for your number if unset.
+        if session.currentUser?.hasDiscoveryPhone == true {
+            Task { await vm.matchContacts() }
+        } else {
+            pendingContactMatch = true
+            showDiscovery = true
+        }
     }
 
     private func openPushGame(_ id: String?) {
@@ -123,7 +146,7 @@ struct FriendsView: View {
     }
 
     private var contactsCard: some View {
-        Button { Task { await vm.matchContacts() } } label: {
+        Button { startContactMatch() } label: {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "person.crop.circle.badge.plus").foregroundStyle(Palette.mint)
                     .frame(width: 40, height: 40).background(Palette.mintSoft, in: RoundedRectangle(cornerRadius: Radius.sm))
@@ -142,7 +165,10 @@ struct FriendsView: View {
         switch vm.contactsState {
         case .denied: "Enable Contacts access in Settings"
         case .done: "\(vm.contactMatches.count) match\(vm.contactMatches.count == 1 ? "" : "es") found"
-        default: "Privately matched, numbers are never shared"
+        default:
+            session.currentUser?.hasDiscoveryPhone == true
+                ? "Privately matched, numbers are never shared"
+                : "Add your number so friends can find you too"
         }
     }
 
