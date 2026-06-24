@@ -20,9 +20,11 @@ struct EvalBar: View {
                 if showLabel {
                     Text(label)
                         .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                         .foregroundStyle(whiteAhead ? Palette.evalBlack : Palette.evalWhite)
                         .padding(.vertical, 3)
-                        .fixedSize()
+                        .frame(width: 16)
                 }
             }
         }
@@ -33,6 +35,7 @@ struct EvalBar: View {
 
     private var label: String {
         if let m = mateWhite, m != 0 { return "M\(abs(m))" }
-        return String(format: "%+.1f", cpWhite / 100.0)
+        // Magnitude only: the bar fill (and label position) already shows which side is ahead.
+        return String(format: "%.1f", abs(cpWhite) / 100.0)
     }
 }
