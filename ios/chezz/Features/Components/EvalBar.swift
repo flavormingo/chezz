@@ -20,15 +20,13 @@ struct EvalBar: View {
                 if showLabel {
                     Text(label)
                         .font(.system(size: 9, weight: .bold, design: .rounded))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
                         .foregroundStyle(whiteAhead ? Palette.evalBlack : Palette.evalWhite)
                         .padding(.vertical, 3)
-                        .frame(width: 16)
+                        .fixedSize()
                 }
             }
         }
-        .frame(width: 16)
+        .frame(width: 18)
         .clipShape(Capsule())
         .overlay(Capsule().strokeBorder(Palette.hairline, lineWidth: 0.5))
     }
