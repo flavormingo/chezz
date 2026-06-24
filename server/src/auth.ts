@@ -74,7 +74,7 @@ export const auth = betterAuth({
     bearer(),
 
     username({
-      minUsernameLength: 3,
+      minUsernameLength: 2,
       maxUsernameLength: 20,
       usernameNormalization: (u) => u.toLowerCase(),
     }),
