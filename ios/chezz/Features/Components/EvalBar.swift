@@ -26,7 +26,7 @@ struct EvalBar: View {
                 }
             }
         }
-        .frame(width: 18)
+        .frame(width: 20)
         .clipShape(Capsule())
         .overlay(Capsule().strokeBorder(Palette.hairline, lineWidth: 0.5))
     }
