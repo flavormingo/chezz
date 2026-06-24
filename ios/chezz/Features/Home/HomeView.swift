@@ -216,7 +216,7 @@ struct HomeView: View {
     private func reviewArchived(_ g: ArchivedGame) {
         route = .review(ReviewViewModel(history: g.history, startFEN: g.startFEN, result: g.resultSummary,
                                         whiteName: g.whiteName, blackName: g.blackName,
-                                        perspective: g.humanColor ?? .white))
+                                        perspective: g.humanColor ?? .white, cacheKey: g.id))
     }
 
     private func recordIfNeeded(_ vm: GameViewModel) {
