@@ -17,9 +17,9 @@ struct GameView: View {
 
             VStack(spacing: Spacing.sm) {
                 toolbar
-                playerBar(side: vm.topSide, thinking: vm.thinking && vm.topSide == vm.game.sideToMove)
+                playerBar(side: vm.topSide)
                 boardArea
-                playerBar(side: vm.bottomSide, thinking: vm.thinking && vm.bottomSide == vm.game.sideToMove)
+                playerBar(side: vm.bottomSide)
                 actionRow
                 MoveNavBar(game: vm.game)
             }
@@ -97,26 +97,21 @@ struct GameView: View {
         .padding(.vertical, Spacing.xs)
     }
 
-    private func playerBar(side: Side, thinking: Bool) -> some View {
+    private func playerBar(side: Side) -> some View {
         let clock = vm.game.clock
-        return HStack {
-            GamePlayerBar(
-                name: playerName(side),
-                rating: rating(side),
-                colorHex: side == vm.bottomSide ? "#34E5A1" : "#8B95A7",
-                isBot: isBot(side),
-                side: side,
-                pieces: vm.game.pieceMap,
-                clockSeconds: clock?.remaining(side),
-                clockActive: clock?.activeSide == side && !vm.game.isGameOver,
-                clockLow: clock?.isLow(side) ?? false,
-                toMove: vm.game.sideToMove == side && !vm.game.isGameOver,
-                imageURL: avatarURL(side)
-            )
-            if thinking {
-                ProgressView().tint(Palette.mint).padding(.leading, 4)
-            }
-        }
+        return GamePlayerBar(
+            name: playerName(side),
+            rating: rating(side),
+            colorHex: side == vm.bottomSide ? "#34E5A1" : "#8B95A7",
+            isBot: isBot(side),
+            side: side,
+            pieces: vm.game.pieceMap,
+            clockSeconds: clock?.remaining(side),
+            clockActive: clock?.activeSide == side && !vm.game.isGameOver,
+            clockLow: clock?.isLow(side) ?? false,
+            toMove: vm.game.sideToMove == side && !vm.game.isGameOver,
+            imageURL: avatarURL(side)
+        )
     }
 
     private func avatarURL(_ side: Side) -> URL? {
