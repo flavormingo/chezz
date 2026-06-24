@@ -19,6 +19,7 @@ struct RootView: View {
                 .tag(Tab.profile)
         }
         .tint(Palette.mint)
+        .onAppear { KeyboardDismiss.install() }
         .task { await session.bootstrap() }
         .task(priority: .utility) { await StockfishEngine.shared.start() }
         .onChange(of: push.wantsFriendsTab) { _, want in
