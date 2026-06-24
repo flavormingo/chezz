@@ -71,12 +71,12 @@ struct ProfileView: View {
     private func discoverabilityCard(_ user: UserProfile) -> some View {
         Button { showDiscovery = true } label: {
             HStack(spacing: Spacing.sm) {
-                Image(systemName: user.discoverable ? "person.crop.circle.fill.badge.checkmark" : "person.crop.circle.badge.questionmark")
-                    .foregroundStyle(user.discoverable ? Palette.mint : Palette.textSecondary)
+                Image(systemName: user.hasDiscoveryPhone ? "person.crop.circle.fill.badge.checkmark" : "person.crop.circle.badge.questionmark")
+                    .foregroundStyle(user.hasDiscoveryPhone ? Palette.mint : Palette.textSecondary)
                     .frame(width: 36, height: 36).background(Palette.surface2, in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Findable by friends").font(.chezzHeadline).foregroundStyle(Palette.textPrimary)
-                    Text(user.discoverable ? "On. Friends with your number can find you." : "Off. Add your number to be found from contacts.")
+                    Text(user.hasDiscoveryPhone ? "On. Friends with your number can find you." : "Off. Add your number to be found from contacts.")
                         .font(.chezzCaption).foregroundStyle(Palette.textSecondary)
                 }
                 Spacer()
@@ -136,12 +136,13 @@ struct ProfileView: View {
 struct DiscoveryPhoneSheet: View {
     @Environment(SessionStore.self) private var session
     @Environment(\.dismiss) private var dismiss
-    @State private var phone = "+1"
+    @State private var phone = ""
     @State private var busy = false
     @State private var error: String?
 
-    private var isDiscoverable: Bool { session.currentUser?.discoverable ?? false }
-    private var valid: Bool { phone.hasPrefix("+") && phone.filter(\.isNumber).count >= 8 }
+    private var isDiscoverable: Bool { session.currentUser?.hasDiscoveryPhone ?? false }
+    // Loose gate only; the server validates properly with libphonenumber + region. No "+" required.
+    private var valid: Bool { phone.filter(\.isNumber).count >= 7 }
 
     var body: some View {
         NavigationStack {
@@ -156,7 +157,7 @@ struct DiscoveryPhoneSheet: View {
                     }
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Your phone number").font(.chezzCaption).foregroundStyle(Palette.textTertiary)
-                        TextField("+1 555 123 4567", text: $phone)
+                        TextField("(555) 123-4567", text: $phone)
                             .keyboardType(.phonePad).textContentType(.telephoneNumber)
                             .padding(Spacing.sm).background(Palette.surface2, in: RoundedRectangle(cornerRadius: Radius.sm))
                             .foregroundStyle(Palette.textPrimary)
@@ -182,7 +183,7 @@ struct DiscoveryPhoneSheet: View {
 
     private func save() async {
         busy = true; error = nil
-        do { try await session.setDiscoveryPhone(phone.trimmingCharacters(in: .whitespaces)); dismiss() }
+        do { try await session.setDiscoveryPhone(phone.trimmingCharacters(in: .whitespaces), region: ContactsService.region); dismiss() }
         catch { self.error = (error as? APIError)?.message ?? "Couldn't save your number." }
         busy = false
     }
