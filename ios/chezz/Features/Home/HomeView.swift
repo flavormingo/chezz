@@ -115,11 +115,36 @@ struct HomeView: View {
                 }
                 .padding(Spacing.sm).chezzCard(fill: Palette.surface, radius: Radius.md)
             } else {
-                ForEach(archive.games.prefix(12)) { g in
+                ForEach(archive.games.prefix(4)) { g in
                     Button { reviewArchived(g) } label: { recentRow(g) }.buttonStyle(.plain)
+                }
+                if archive.games.count > 4 {
+                    NavigationLink { allGamesScreen } label: {
+                        HStack {
+                            Text("Show More").font(.chezzCallout).foregroundStyle(Palette.mint)
+                            Spacer()
+                            Image(systemName: "chevron.right").foregroundStyle(Palette.textTertiary)
+                        }
+                        .padding(Spacing.sm).chezzCard(fill: Palette.surface, radius: Radius.md)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
+    }
+
+    private var allGamesScreen: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                ForEach(archive.games) { g in
+                    Button { reviewArchived(g) } label: { recentRow(g) }.buttonStyle(.plain)
+                }
+            }
+            .padding(Spacing.md)
+        }
+        .background(Palette.canvas.ignoresSafeArea())
+        .navigationTitle("All games")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func recentRow(_ g: ArchivedGame) -> some View {
