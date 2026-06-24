@@ -28,8 +28,8 @@ extension APIClient {
 
     func me() async throws -> ProfileDTO { try await get("/api/v1/me", as: ProfileDTO.self) }
     func patchMe(_ body: PatchMeBody) async throws -> ProfileDTO { try await patch("/api/v1/me", body: body, as: ProfileDTO.self) }
-    func setDiscoveryPhone(_ phoneNumber: String) async throws -> ProfileDTO {
-        try await post("/api/v1/me/discovery-phone", body: DiscoveryPhoneBody(phoneNumber: phoneNumber), as: ProfileDTO.self)
+    func setDiscoveryPhone(_ phoneNumber: String, region: String?) async throws -> ProfileDTO {
+        try await post("/api/v1/me/discovery-phone", body: DiscoveryPhoneBody(phoneNumber: phoneNumber, region: region), as: ProfileDTO.self)
     }
     func clearDiscoveryPhone() async throws { try await deleteVoid("/api/v1/me/discovery-phone") }
     func registerPushToken(_ token: String, environment: String) async throws {
@@ -47,8 +47,8 @@ extension APIClient {
     func searchUsers(_ query: String) async throws -> [ProfileDTO] {
         try await get("/api/v1/users/search?q=\(q(query))", as: SearchResponse.self).results
     }
-    func matchContacts(_ phoneNumbers: [String]) async throws -> [ProfileDTO] {
-        try await post("/api/v1/contacts/match", body: ContactsBody(phoneNumbers: phoneNumbers), as: MatchResponse.self).matches
+    func matchContacts(_ phoneNumbers: [String], region: String?) async throws -> [ProfileDTO] {
+        try await post("/api/v1/contacts/match", body: ContactsBody(phoneNumbers: phoneNumbers, region: region), as: MatchResponse.self).matches
     }
 
     func friends() async throws -> [ProfileDTO] { try await get("/api/v1/friends", as: FriendsResponse.self).friends }
