@@ -37,6 +37,10 @@ struct FriendsView: View {
             }
         }
         .fullScreenCover(item: $route) { route in coverView(route) }
+        .alert("Something went wrong", isPresented: Binding(
+            get: { vm.error != nil }, set: { if !$0 { vm.error = nil } })) {
+            Button("OK", role: .cancel) { vm.error = nil }
+        } message: { Text(vm.error ?? "") }
         .task(id: session.isSignedIn) { if session.isSignedIn { await vm.load() } }
         .onChange(of: push.pendingGameId) { _, id in openPushGame(id) }
         .onAppear { openPushGame(push.pendingGameId) }
@@ -100,6 +104,9 @@ struct FriendsView: View {
                     if !vm.incomingRequests.isEmpty {
                         section("Friend requests") { ForEach(vm.incomingRequests) { requestRow($0) } }
                     }
+                    if !vm.outgoingRequests.isEmpty {
+                        section("Requests sent") { ForEach(vm.outgoingRequests) { sentRequestRow($0) } }
+                    }
                     section("Friends") {
                         if vm.friends.isEmpty {
                             Text("Add friends to challenge them to a game.").font(.chezzCaption).foregroundStyle(Palette.textSecondary)
@@ -153,6 +160,10 @@ struct FriendsView: View {
                 Button("Challenge") { challengeTarget = user }
                     .font(.chezzCaption).foregroundStyle(Palette.onAccent)
                     .padding(.horizontal, 12).padding(.vertical, 7).background(Palette.mint, in: Capsule())
+            } else if vm.hasOutgoingRequest(to: user.id) {
+                Text("Pending")
+                    .font(.chezzCaption).foregroundStyle(Palette.textSecondary)
+                    .padding(.horizontal, 12).padding(.vertical, 7).background(Palette.surface2, in: Capsule())
             } else {
                 Button("Add") { Task { await vm.sendRequest(to: user) } }
                     .font(.chezzCaption).foregroundStyle(Palette.mint)
@@ -175,6 +186,21 @@ struct FriendsView: View {
                 Image(systemName: "xmark").foregroundStyle(Palette.textSecondary)
                     .frame(width: 32, height: 32).background(Palette.surface2, in: Circle())
             }
+        }
+        .padding(Spacing.sm).chezzCard(fill: Palette.surface, radius: Radius.md)
+    }
+
+    private func sentRequestRow(_ req: FriendRequestDTO) -> some View {
+        HStack(spacing: Spacing.sm) {
+            Avatar(name: req.to.toUser().name, colorHex: req.to.avatarColor ?? "#34E5A1", size: 40, imageURL: req.to.image.flatMap { URL(string: $0) })
+            VStack(alignment: .leading, spacing: 1) {
+                Text(req.to.toUser().name).font(.chezzCallout).foregroundStyle(Palette.textPrimary)
+                Text("Request pending").font(.chezzCaption).foregroundStyle(Palette.textSecondary)
+            }
+            Spacer()
+            Button("Cancel") { Task { await vm.declineRequest(req.id) } }
+                .font(.chezzCaption).foregroundStyle(Palette.textSecondary)
+                .padding(.horizontal, 12).padding(.vertical, 7).background(Palette.surface2, in: Capsule())
         }
         .padding(Spacing.sm).chezzCard(fill: Palette.surface, radius: Radius.md)
     }
