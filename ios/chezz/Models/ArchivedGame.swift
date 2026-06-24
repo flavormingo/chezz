@@ -37,10 +37,12 @@ struct ArchivedGame: Identifiable, Codable, Hashable {
 
     var resultText: String {
         switch outcome {
-        case .win(.white): return "1–0"
-        case .win(.black): return "0–1"
-        case .draw: return "½–½"
-        case .ongoing: return "*"
+        case .draw: return "Draw"
+        case .ongoing: return "—"
+        case let .win(side):
+            // Relative to the player when there is one; pass & play has no "you", so name the winner.
+            if let me = humanColor { return side == me ? "Won" : "Lost" }
+            return side == .white ? "White won" : "Black won"
         }
     }
 }
