@@ -45,6 +45,10 @@ final class FriendsViewModel {
     func declineRequest(_ id: String) async { try? await api.declineFriendRequest(id); await load() }
     func unfriend(_ userId: String) async { try? await api.unfriend(userId); await load() }
 
+    func hasOutgoingRequest(to userId: String) -> Bool {
+        outgoingRequests.contains { $0.to.id == userId }
+    }
+
     func matchContacts() async {
         contactsState = .loading
         do {
