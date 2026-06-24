@@ -33,13 +33,15 @@ contactsRoutes.post('/match', async (c) => {
   if (numbers.length > MAX_BATCH) {
     apiError(400, 'batch_too_large', `At most ${MAX_BATCH} numbers per request.`);
   }
+  // The caller's device region (e.g. "US") lets national-format contacts resolve a country code.
+  const region = typeof body.region === 'string' ? body.region : null;
 
   // Hash in memory and match on phoneHash; the raw numbers are never stored.
   const hashes = new Set<string>();
   for (const n of numbers) {
     if (typeof n !== 'string') continue;
-    // Normalize with the same function /me/discovery-phone uses, so the hashes line up.
-    const e164 = normalizeE164(n);
+    // Normalize with the same function (and region) /me/discovery-phone uses, so the hashes line up.
+    const e164 = normalizeE164(n, region);
     if (e164) hashes.add(hashPhone(e164));
   }
   if (hashes.size === 0) return c.json({ matches: [] });
