@@ -52,13 +52,14 @@ final class FriendsViewModel {
     func matchContacts() async {
         contactsState = .loading
         do {
-            let phones = try await ContactsService.requestAndFetchE164()
+            let phones = try await ContactsService.requestAndFetchNumbers()
+            let region = ContactsService.region
             // The server caps each request at 1000 numbers, so match in chunks and merge.
             var seen = Set<String>()
             var matches: [UserProfile] = []
             for start in stride(from: 0, to: phones.count, by: 1000) {
                 let chunk = Array(phones[start..<min(start + 1000, phones.count)])
-                for user in try await api.matchContacts(chunk).map({ $0.toUser() }) where seen.insert(user.id).inserted {
+                for user in try await api.matchContacts(chunk, region: region).map({ $0.toUser() }) where seen.insert(user.id).inserted {
                     matches.append(user)
                 }
             }
