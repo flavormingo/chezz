@@ -26,3 +26,10 @@ export function toProfile(u: UserRow, isFriend: boolean): Profile {
     discoverable: u.discoverable,
   };
 }
+
+// The signed-in user's own profile. `hasDiscoveryPhone` lets the client show "Findable" honestly
+// and prompt for a number; it is intentionally NOT on toProfile, so we never leak whether OTHER
+// users have a number set. Every /me self-return must use this, or the client would reset the flag.
+export function selfProfile(u: UserRow): Profile & { hasDiscoveryPhone: boolean } {
+  return { ...toProfile(u, false), hasDiscoveryPhone: u.phoneHash != null };
+}
