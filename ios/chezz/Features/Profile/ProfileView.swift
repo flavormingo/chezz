@@ -216,7 +216,7 @@ struct EditProfileSheet: View {
     private var changedUsername: Bool { username.lowercased() != currentUsername.lowercased() }
     private var usernameValid: Bool {
         let n = username.lowercased()
-        return n.count >= 3 && n.count <= 20 && n.allSatisfy { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "." }
+        return n.count >= 2 && n.count <= 20 && n.allSatisfy { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "." }
     }
     private var canSaveUsername: Bool {
         usernameValid && changedUsername && (available ?? false) && !savingUsername
