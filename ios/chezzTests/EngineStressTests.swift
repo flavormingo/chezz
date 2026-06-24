@@ -59,6 +59,23 @@ final class EngineStressTests: XCTestCase {
     }
 
     @MainActor
+    func testAnalysisIsDeterministic() async throws {
+        let engine = StockfishEngine.shared
+        guard await engine.isAvailableEnsuringStart() else {
+            throw XCTSkip("Stockfish nets not present in the test bundle")
+        }
+        // The same position analyzed twice must yield identical eval/best move, or a re-opened
+        // review shows different accuracy each time (the bug). Single-thread + cleared TT guarantee it.
+        let fen = "rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6"
+        let a1 = await engine.analyze(fen: fen)
+        let a2 = await engine.analyze(fen: fen)
+        XCTAssertFalse(a1.isEmpty, "analysis returned no lines")
+        XCTAssertEqual(a1.map(\.bestMove), a2.map(\.bestMove), "best moves differ between runs")
+        XCTAssertEqual(a1.map(\.scoreCP), a2.map(\.scoreCP), "evals differ between runs")
+        XCTAssertEqual(a1.map(\.mate), a2.map(\.mate), "mate scores differ between runs")
+    }
+
+    @MainActor
     func testEngineRepliesAfterCaptures() async throws {
         let engine = StockfishEngine.shared
         guard await engine.isAvailableEnsuringStart() else {
