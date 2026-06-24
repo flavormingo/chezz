@@ -12,7 +12,7 @@ import {
 import { env } from '../env.js';
 import { apiError, requireAuth, type AppEnv } from '../http.js';
 import { hashPhone, normalizeE164 } from '../lib/hash.js';
-import { toProfile } from '../lib/profile-mapper.js';
+import { selfProfile } from '../lib/profile-mapper.js';
 import { sendEmailChangeCode } from '../lib/resend.js';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -21,7 +21,7 @@ export const meRoutes = new Hono<AppEnv>();
 
 meRoutes.use('*', requireAuth);
 
-meRoutes.get('/', (c) => c.json(toProfile(c.get('user'), false)));
+meRoutes.get('/', (c) => c.json(selfProfile(c.get('user'))));
 
 meRoutes.patch('/', async (c) => {
   const me = c.get('user');
@@ -54,7 +54,7 @@ meRoutes.patch('/', async (c) => {
   }
 
   if (Object.keys(patch).length === 0) {
-    return c.json(toProfile(me, false));
+    return c.json(selfProfile(me));
   }
   patch.updatedAt = new Date();
 
@@ -64,7 +64,7 @@ meRoutes.patch('/', async (c) => {
       .set(patch)
       .where(eq(userTable.id, me.id))
       .returning();
-    return c.json(toProfile(updated!, false));
+    return c.json(selfProfile(updated!));
   } catch (err) {
     // A lower(username) unique violation surfaces as a friendly 409.
     if (err instanceof Error && /unique|duplicate/i.test(err.message)) {
@@ -81,9 +81,11 @@ meRoutes.post('/discovery-phone', async (c) => {
   if (typeof body.phoneNumber !== 'string') {
     apiError(400, 'invalid_body', 'phoneNumber is required.');
   }
-  const e164 = normalizeE164(body.phoneNumber);
+  // `region` (e.g. "US") lets a national-format number resolve its country code; same parse as /contacts/match.
+  const region = typeof body.region === 'string' ? body.region : null;
+  const e164 = normalizeE164(body.phoneNumber, region);
   if (!e164) {
-    apiError(400, 'invalid_phone', 'phoneNumber must be a valid E.164 number (e.g. +14155550123).');
+    apiError(400, 'invalid_phone', 'Enter a valid phone number, including the area code.');
   }
 
   const phoneHash = hashPhone(e164);
@@ -93,7 +95,7 @@ meRoutes.post('/discovery-phone', async (c) => {
       .set({ phoneHash, discoverable: true, updatedAt: new Date() })
       .where(eq(userTable.id, me.id))
       .returning();
-    return c.json(toProfile(updated!, false));
+    return c.json(selfProfile(updated!));
   } catch (err) {
     // A phoneHash unique violation means another account already claims this number.
     if (err instanceof Error && /unique|duplicate/i.test(err.message)) {
@@ -110,7 +112,7 @@ meRoutes.delete('/discovery-phone', async (c) => {
     .set({ phoneHash: null, discoverable: false, updatedAt: new Date() })
     .where(eq(userTable.id, me.id))
     .returning();
-  return c.json(toProfile(updated!, false));
+  return c.json(selfProfile(updated!));
 });
 
 meRoutes.post('/push-token', async (c) => {
@@ -171,7 +173,7 @@ meRoutes.post('/avatar', async (c) => {
     .set({ image: url, updatedAt: new Date() })
     .where(eq(userTable.id, me.id))
     .returning();
-  return c.json(toProfile(updated!, false));
+  return c.json(selfProfile(updated!));
 });
 
 meRoutes.delete('/avatar', async (c) => {
@@ -181,7 +183,7 @@ meRoutes.delete('/avatar', async (c) => {
     .set({ image: null, updatedAt: new Date() })
     .where(eq(userTable.id, me.id))
     .returning();
-  return c.json(toProfile(updated!, false));
+  return c.json(selfProfile(updated!));
 });
 
 meRoutes.post('/email/start', async (c) => {
@@ -241,5 +243,5 @@ meRoutes.post('/email/verify', async (c) => {
     .where(eq(userTable.id, me.id))
     .returning();
   await db.delete(verificationTable).where(eq(verificationTable.identifier, identifier));
-  return c.json(toProfile(updated!, false));
+  return c.json(selfProfile(updated!));
 });
