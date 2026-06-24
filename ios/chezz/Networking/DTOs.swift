@@ -9,12 +9,14 @@ struct ProfileDTO: Codable, Identifiable, Hashable {
     let image: String?
     let isFriend: Bool?
     let discoverable: Bool?
+    // Only the signed-in user's own /me profile carries this; nil (-> false) for everyone else.
+    let hasDiscoveryPhone: Bool?
 
     func toUser() -> UserProfile {
         UserProfile(id: id, username: username, displayName: displayName ?? "",
                     rating: rating ?? 1200, avatarColor: avatarColor ?? "#34E5A1",
                     isFriend: isFriend ?? false, discoverable: discoverable ?? true,
-                    imageURL: image)
+                    imageURL: image, hasDiscoveryPhone: hasDiscoveryPhone ?? false)
     }
 }
 
@@ -70,12 +72,12 @@ struct GamesResponse: Codable { let games: [GameDTO] }
 
 struct EmailOtpSendBody: Encodable { let email: String; let type: String }
 struct EmailOtpVerifyBody: Encodable { let email: String; let otp: String }
-struct DiscoveryPhoneBody: Encodable { let phoneNumber: String }
+struct DiscoveryPhoneBody: Encodable { let phoneNumber: String; let region: String? }
 struct AppleIdTokenBody: Encodable { let token: String; let nonce: String }
 struct AppleSignInBody: Encodable { let provider = "apple"; let idToken: AppleIdTokenBody }
 struct UpdateUserBody: Encodable { let username: String; let displayUsername: String }
 struct UsernameCheckBody: Encodable { let username: String }
-struct ContactsBody: Encodable { let phoneNumbers: [String] }
+struct ContactsBody: Encodable { let phoneNumbers: [String]; let region: String? }
 struct ToUserBody: Encodable { let toUserId: String }
 struct CreateChallengeBody: Encodable {
     let toUserId: String
