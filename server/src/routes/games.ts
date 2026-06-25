@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, or } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, or } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { db } from '../db/index.js';
 import { game as gameTable, user as userTable } from '../db/schema.js';
@@ -103,6 +103,35 @@ gamesRoutes.post('/:id/move', async (c) => {
 
   const [dto] = await dtoFor([result.game], me.id);
   return c.json(dto);
+});
+
+// Shared Game Review: clients analyze on-device (non-deterministic across devices), so the first
+// participant to open the review uploads it and everyone else downloads that one canonical copy.
+gamesRoutes.get('/:id/review', async (c) => {
+  const me = c.get('user');
+  const g = await requireParticipantGame(me.id, c.req.param('id'));
+  return c.json({ review: g.review ?? null });
+});
+
+gamesRoutes.post('/:id/review', async (c) => {
+  const me = c.get('user');
+  const id = c.req.param('id');
+  const g = await requireParticipantGame(me.id, id);
+  if (g.status === 'active') apiError(409, 'conflict', 'Game is not finished.');
+
+  const body = await c.req.json().catch(() => ({}));
+  if (body.review == null || typeof body.review !== 'object') {
+    apiError(400, 'invalid_body', 'A review object is required.');
+  }
+
+  // First-write-wins: only set when empty, so a simultaneous open by both players still converges on
+  // one review. Re-read and return the stored copy so the caller always gets the canonical version.
+  await db
+    .update(gameTable)
+    .set({ review: body.review })
+    .where(and(eq(gameTable.id, id), isNull(gameTable.review)));
+  const fresh = await getGameRow(id);
+  return c.json({ review: fresh?.review ?? body.review });
 });
 
 gamesRoutes.post('/:id/resign', async (c) => {
