@@ -75,7 +75,7 @@ struct PositionEval: Sendable, Equatable {
     }
 }
 
-struct MoveReview: Identifiable, Sendable {
+struct MoveReview: Identifiable, Sendable, Codable {
     let id = UUID()
     let ply: Int
     let color: Side
@@ -99,7 +99,7 @@ struct MoveReview: Identifiable, Sendable {
     var moveNumber: Int { (ply + 1) / 2 }
 }
 
-struct GameReview: Sendable {
+struct GameReview: Sendable, Codable {
     var moves: [MoveReview]
     var whiteAccuracy: Double?
     var blackAccuracy: Double?
