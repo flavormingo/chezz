@@ -156,6 +156,10 @@ export const game = pgTable(
     movesUci: jsonb('moves_uci').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
     pgn: text('pgn').notNull().default(''),
 
+    // Game Review, computed on-device and shared: the first participant to open the review uploads it
+    // (first-write-wins) so both players see the identical analysis instead of each recomputing.
+    review: jsonb('review').$type<unknown>(),
+
     whiteTimeMs: integer('white_time_ms'),
     blackTimeMs: integer('black_time_ms'),
     lastMoveAt: timestamp('last_move_at'),
