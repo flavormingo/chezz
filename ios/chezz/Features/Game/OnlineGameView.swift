@@ -3,7 +3,7 @@ import ChessKit
 
 struct OnlineGameView: View {
     @State var vm: OnlineGameViewModel
-    var onReview: (ChessGame, ResultSummary?) -> Void
+    var onReview: (ChessGame, ResultSummary?, UUID?) -> Void
     var onExit: () -> Void
 
     @State private var showResign = false
@@ -123,7 +123,7 @@ struct OnlineGameView: View {
                     .font(.system(size: 40)).foregroundStyle(summary.outcome.winner == nil ? Palette.textSecondary : Palette.gold)
                 Text(summary.headline).font(.chezzTitle).foregroundStyle(Palette.textPrimary)
                 Text(summary.subtitle).font(.chezzCallout).foregroundStyle(Palette.textSecondary)
-                Button { onReview(vm.game, vm.result) } label: { Label("Game Review", systemImage: "sparkles") }
+                Button { onReview(vm.game, vm.result, vm.archivedGameId) } label: { Label("Game Review", systemImage: "sparkles") }
                     .buttonStyle(ChezzPrimaryButtonStyle())
                 Button { onExit() } label: { Text("Exit").font(.chezzCallout).foregroundStyle(Palette.textSecondary) }
             }
