@@ -74,4 +74,14 @@ extension APIClient {
 
     func games(status: String) async throws -> [GameDTO] { try await get("/api/v1/games?status=\(status)", as: GamesResponse.self).games }
     func game(_ id: String) async throws -> GameDTO { try await get("/api/v1/games/\(id)", as: GameDTO.self) }
+
+    // Shared Game Review for online games. The canonical review is whatever the server already holds, so
+    // uploadGameReview returns the stored copy (which may be another player's if they opened it first).
+    func gameReview(_ gameId: String) async throws -> GameReview? {
+        try await get("/api/v1/games/\(gameId)/review", as: GameReviewResponse.self).review
+    }
+    @discardableResult
+    func uploadGameReview(_ gameId: String, _ review: GameReview) async throws -> GameReview? {
+        try await post("/api/v1/games/\(gameId)/review", body: GameReviewBody(review: review), as: GameReviewResponse.self).review
+    }
 }
