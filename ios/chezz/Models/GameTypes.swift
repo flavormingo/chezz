@@ -61,7 +61,7 @@ enum OpponentKind: Hashable {
     }
 }
 
-struct ResultSummary: Equatable {
+struct ResultSummary: Equatable, Codable {
     var outcome: GameOutcome
     var termination: Termination
 
