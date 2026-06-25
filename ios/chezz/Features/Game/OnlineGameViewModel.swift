@@ -12,6 +12,9 @@ final class OnlineGameViewModel: Identifiable {
     let settings: AppSettings
     private let archive: GameArchive
     private var didArchive = false
+    // Id of this game's archived record; used as the review cache key so the post-game review and the
+    // recent-games review share one cached result instead of each analyzing (and differing slightly).
+    private(set) var archivedGameId: UUID?
 
     private(set) var game: ChessGame
     var mySide: Side = .white
@@ -56,7 +59,8 @@ final class OnlineGameViewModel: Identifiable {
     private func archiveIfFinished() {
         guard !didArchive, let result, !game.history.isEmpty else { return }
         didArchive = true
-        archive.record(game, whiteName: whiteName, blackName: blackName, result: result, sourceId: gameId)
+        archivedGameId = archive.record(game, whiteName: whiteName, blackName: blackName,
+                                        result: result, sourceId: gameId)?.id
     }
 
     var topSide: Side { perspective.opposite }
