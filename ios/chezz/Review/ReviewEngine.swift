@@ -145,20 +145,37 @@ struct ReviewEngine {
     // Terminal positions emit no PV, so detect checkmate/stalemate from the board instead.
     struct Eff { let winSTM: Double; let winWhite: Double; let cpWhite: Double; let mateWhite: Int? }
     static func effective(_ p: PositionEval) -> Eff {
-        if p.lines.isEmpty, let pos = Position(fen: p.fen) {
-            switch Board(position: pos).state {
-            case .checkmate:
+        if p.lines.isEmpty {
+            if case .checkmate = terminalState(fen: p.fen, sideToMove: p.sideToMove) {
                 // Side to move is checkmated, so it has lost.
                 let stm = p.sideToMove
                 return Eff(winSTM: 0,
                            winWhite: stm == .white ? 0 : 100,
                            cpWhite: stm == .white ? -Eval.mateMagnitude : Eval.mateMagnitude,
                            mateWhite: stm == .white ? -1 : 1)
-            default:
-                return Eff(winSTM: 50, winWhite: 50, cpWhite: 0, mateWhite: nil)
             }
+            // Stalemate / draw, or an engine miss on a live position: treat as equal.
+            return Eff(winSTM: 50, winWhite: 50, cpWhite: 0, mateWhite: nil)
         }
         return Eff(winSTM: p.winPctSTM, winWhite: p.winPctWhite, cpWhite: p.cpWhite, mateWhite: p.mateWhite)
+    }
+
+    // ChessKit computes `Board.state` for the side that *just moved* (whose opponent is now the
+    // side to move), so a position loaded straight from a FEN tests the wrong king and reports a
+    // checkmated side-to-move as `.active`. Flipping the side-to-move field makes ChessKit evaluate
+    // the king that's actually on the move, giving a correct checkmate/stalemate verdict while still
+    // using the library's own (pin-aware) attack detection.
+    static func terminalState(fen: String, sideToMove stm: Side) -> Board.State {
+        let flipped = fenWithSideToMove(fen, stm == .white ? "b" : "w")
+        guard let pos = Position(fen: flipped) else { return .active }
+        return Board(position: pos).state
+    }
+
+    static func fenWithSideToMove(_ fen: String, _ side: String) -> String {
+        var fields = fen.split(separator: " ", omittingEmptySubsequences: false).map(String.init)
+        guard fields.count >= 2 else { return fen }
+        fields[1] = side
+        return fields.joined(separator: " ")
     }
 
     // Sacrifice = mover is down ≥ ~2 points of material after the opponent's best reply.
