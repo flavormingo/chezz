@@ -10,6 +10,8 @@ final class OnlineGameViewModel: Identifiable {
     let gameId: String
     let myUserId: String
     let settings: AppSettings
+    private let archive: GameArchive
+    private var didArchive = false
 
     private(set) var game: ChessGame
     var mySide: Side = .white
@@ -41,11 +43,20 @@ final class OnlineGameViewModel: Identifiable {
     private var watchdog: Task<Void, Never>?
     private var didInitPerspective = false
 
-    init(gameId: String, myUserId: String, settings: AppSettings) {
+    init(gameId: String, myUserId: String, settings: AppSettings, archive: GameArchive) {
         self.gameId = gameId
         self.myUserId = myUserId
         self.settings = settings
+        self.archive = archive
         self.game = ChessGame(timeControl: .untimed, opponent: .online(opponentId: "", opponentName: "Opponent"), humanColor: .white)
+    }
+
+    // Save a finished online game to the local archive so it appears in Recent Games. Uses the server's
+    // authoritative result (resignations/timeouts never reach the local board) and de-dupes on gameId.
+    private func archiveIfFinished() {
+        guard !didArchive, let result, !game.history.isEmpty else { return }
+        didArchive = true
+        archive.record(game, whiteName: whiteName, blackName: blackName, result: result, sourceId: gameId)
     }
 
     var topSide: Side { perspective.opposite }
@@ -181,6 +192,7 @@ final class OnlineGameViewModel: Identifiable {
             result = Self.summary(result: env.result, termination: env.termination)
             withAnimation { showResult = true }
             Feedback.play(.gameEnd, haptics: settings.hapticsEnabled, sound: settings.soundEnabled)
+            archiveIfFinished()
         case "error":
             clearAwaiting()
             Task { if let g = try? await api.game(gameId) { applyState(g) } }
@@ -216,6 +228,7 @@ final class OnlineGameViewModel: Identifiable {
         if g.status != "active" {
             result = Self.summary(result: g.result, termination: g.termination)
             showResult = result != nil
+            archiveIfFinished()
         }
     }
 
