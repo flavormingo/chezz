@@ -70,6 +70,10 @@ struct GameDTO: Codable, Identifiable, Hashable {
 }
 struct GamesResponse: Codable { let games: [GameDTO] }
 
+// Shared Game Review: the server stores one canonical review per game (first writer wins).
+struct GameReviewResponse: Decodable { let review: GameReview? }
+struct GameReviewBody: Encodable { let review: GameReview }
+
 struct EmailOtpSendBody: Encodable { let email: String; let type: String }
 struct EmailOtpVerifyBody: Encodable { let email: String; let otp: String }
 struct DiscoveryPhoneBody: Encodable { let phoneNumber: String; let region: String? }
