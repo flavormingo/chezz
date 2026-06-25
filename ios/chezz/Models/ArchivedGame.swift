@@ -4,6 +4,7 @@ import ChessKit
 struct ArchivedGame: Identifiable, Codable, Hashable {
     let id: UUID
     let date: Date
+    let sourceId: String?      // server game id for online games; nil for local games (used to de-dupe)
     let whiteName: String
     let blackName: String
     let humanColor: Side?
@@ -49,16 +50,21 @@ struct ArchivedGame: Identifiable, Codable, Hashable {
 
 extension ArchivedGame {
     @MainActor
-    init(from game: ChessGame, whiteName: String, blackName: String, id: UUID = UUID(), date: Date = Date()) {
+    init(from game: ChessGame, whiteName: String, blackName: String,
+         result: ResultSummary? = nil, sourceId: String? = nil,
+         id: UUID = UUID(), date: Date = Date()) {
         self.id = id
         self.date = date
+        self.sourceId = sourceId
         self.whiteName = whiteName
         self.blackName = blackName
         self.humanColor = game.humanColor
         self.opponentLabel = game.opponent.displayName
         self.timeControl = game.timeControl
-        self.outcome = game.outcome
-        self.termination = game.termination ?? .checkmate
+        // Online games end server-side (resignation/timeout) so the local board's outcome can lag;
+        // prefer the authoritative result when one is supplied.
+        self.outcome = result?.outcome ?? game.outcome
+        self.termination = result?.termination ?? game.termination ?? .checkmate
         self.startFEN = game.history.first?.fenBefore ?? Position.standard.fen
         self.moves = game.history.map {
             Archived(ply: $0.ply, color: $0.color, san: $0.san, uci: $0.uci,
