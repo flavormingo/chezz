@@ -97,6 +97,14 @@ struct MoveReview: Identifiable, Sendable, Codable {
     let coachText: String
 
     var moveNumber: Int { (ply + 1) / 2 }
+
+    // `id` is transient view identity, not persisted: exclude it so Codable doesn't warn about the
+    // immutable-with-default property, and let each decode mint a fresh (still-unique) id.
+    private enum CodingKeys: String, CodingKey {
+        case ply, color, san, uci, fenBefore, fenAfter, classification
+        case winBefore, winAfter, accuracy, cpWhiteAfter, mateWhiteAfter, evalWhitePctAfter
+        case bestMoveUCI, bestMoveSAN, bestLineSANs, isBest, coachText
+    }
 }
 
 struct GameReview: Sendable, Codable {
