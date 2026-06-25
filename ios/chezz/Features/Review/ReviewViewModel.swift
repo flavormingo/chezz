@@ -50,9 +50,13 @@ final class ReviewViewModel: Identifiable {
     // cacheKey: when set (an archived game's id), the computed review is cached and reused so
     // re-opening the same game shows the identical result instead of re-analyzing each time.
     let cacheKey: UUID?
+    // serverGameId: set for online games. Reviews are shared via the server so both players see the
+    // identical analysis (on-device engine analysis isn't reproducible across devices).
+    let serverGameId: String?
 
     init(history: [PlayedMove], startFEN: String, result: ResultSummary?,
-         whiteName: String, blackName: String, perspective: Side = .white, cacheKey: UUID? = nil) {
+         whiteName: String, blackName: String, perspective: Side = .white,
+         cacheKey: UUID? = nil, serverGameId: String? = nil) {
         self.history = history
         self.startFEN = startFEN
         self.result = result
@@ -60,19 +64,33 @@ final class ReviewViewModel: Identifiable {
         self.blackName = blackName
         self.perspective = perspective
         self.cacheKey = cacheKey
+        self.serverGameId = serverGameId
     }
 
     var plyCount: Int { history.count }
 
     func load() async {
+        // 1. Already computed on this device (persisted) — instant and stable.
         if let cacheKey, let cached = ReviewCache.shared.review(for: cacheKey) {
-            review = cached
-            loading = false
-            currentPly = 0
+            finish(with: cached)
             return
         }
-        let r = await engine.run(history: history, startFEN: startFEN, result: result,
-                                 progress: { p in Task { @MainActor in self.progress = p } })
+        // 2. Online games: use the shared review if a participant has already computed one.
+        if let serverGameId, let remote = try? await APIClient.shared.gameReview(serverGameId) {
+            finish(with: remote)
+            return
+        }
+        // 3. Compute locally, then (for online games) publish it so the opponent sees the same one.
+        let computed = await engine.run(history: history, startFEN: startFEN, result: result,
+                                        progress: { p in Task { @MainActor in self.progress = p } })
+        var canonical = computed
+        if let serverGameId, !computed.engineUnavailable {
+            canonical = (try? await APIClient.shared.uploadGameReview(serverGameId, computed)) ?? computed
+        }
+        finish(with: canonical)
+    }
+
+    private func finish(with r: GameReview) {
         review = r
         loading = false
         currentPly = 0
