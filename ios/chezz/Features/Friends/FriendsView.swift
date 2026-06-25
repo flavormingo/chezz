@@ -293,12 +293,12 @@ struct FriendsView: View {
             // another, force a fresh OnlineGameView/socket instead of reusing the old @State vm.
             OnlineGameView(
                 vm: OnlineGameViewModel(gameId: gameId, myUserId: myId, settings: settings, archive: archive),
-                onReview: { game, result in
+                onReview: { game, result, cacheKey in
                     self.route = .review(ReviewViewModel(
                         history: game.history,
                         startFEN: game.history.first?.fenBefore ?? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
                         result: result ?? ResultSummary(outcome: game.outcome, termination: game.termination ?? .checkmate),
-                        whiteName: "White", blackName: "Black"))
+                        whiteName: "White", blackName: "Black", cacheKey: cacheKey, serverGameId: gameId))
                 },
                 onExit: { self.route = nil; Task { await vm.load() } })
                 .id(gameId)
