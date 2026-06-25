@@ -4,6 +4,7 @@ struct FriendsView: View {
     @Environment(SessionStore.self) private var session
     @Environment(AppSettings.self) private var settings
     @Environment(PushService.self) private var push
+    @Environment(GameArchive.self) private var archive
 
     @State private var vm = FriendsViewModel()
     @State private var showAuth = false
@@ -291,12 +292,12 @@ struct FriendsView: View {
             // .id keyed on gameId: when a push tap swaps an open cover from one game to
             // another, force a fresh OnlineGameView/socket instead of reusing the old @State vm.
             OnlineGameView(
-                vm: OnlineGameViewModel(gameId: gameId, myUserId: myId, settings: settings),
-                onReview: { game in
+                vm: OnlineGameViewModel(gameId: gameId, myUserId: myId, settings: settings, archive: archive),
+                onReview: { game, result in
                     self.route = .review(ReviewViewModel(
                         history: game.history,
                         startFEN: game.history.first?.fenBefore ?? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                        result: ResultSummary(outcome: game.outcome, termination: game.termination ?? .checkmate),
+                        result: result ?? ResultSummary(outcome: game.outcome, termination: game.termination ?? .checkmate),
                         whiteName: "White", blackName: "Black"))
                 },
                 onExit: { self.route = nil; Task { await vm.load() } })
