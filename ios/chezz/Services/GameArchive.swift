@@ -18,9 +18,15 @@ final class GameArchive {
     }
 
     @discardableResult
-    func record(_ game: ChessGame, whiteName: String, blackName: String) -> ArchivedGame? {
-        guard game.isGameOver, !game.history.isEmpty else { return nil }
-        let archived = ArchivedGame(from: game, whiteName: whiteName, blackName: blackName)
+    func record(_ game: ChessGame, whiteName: String, blackName: String,
+                result: ResultSummary? = nil, sourceId: String? = nil) -> ArchivedGame? {
+        // Online games are over once the server says so even if the local board's outcome lags, so a
+        // supplied result counts as game-over. Local games still require the board itself to be done.
+        guard !game.history.isEmpty, game.isGameOver || result != nil else { return nil }
+        // A finished online game can be opened again later (push tap, "Your games"); never archive twice.
+        if let sourceId, let existing = games.first(where: { $0.sourceId == sourceId }) { return existing }
+        let archived = ArchivedGame(from: game, whiteName: whiteName, blackName: blackName,
+                                    result: result, sourceId: sourceId)
         games.insert(archived, at: 0)
         if games.count > limit { games = Array(games.prefix(limit)) }
         persist()
