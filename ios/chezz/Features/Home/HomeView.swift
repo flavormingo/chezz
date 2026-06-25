@@ -216,9 +216,10 @@ struct HomeView: View {
     }
 
     private func reviewArchived(_ g: ArchivedGame) {
+        // sourceId is the server game id for online games, so both players fetch the same shared review.
         route = .review(ReviewViewModel(history: g.history, startFEN: g.startFEN, result: g.resultSummary,
                                         whiteName: g.whiteName, blackName: g.blackName,
-                                        perspective: g.humanColor ?? .white, cacheKey: g.id))
+                                        perspective: g.humanColor ?? .white, cacheKey: g.id, serverGameId: g.sourceId))
     }
 
     @discardableResult
