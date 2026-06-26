@@ -11,12 +11,14 @@ struct ProfileDTO: Codable, Identifiable, Hashable {
     let discoverable: Bool?
     // Only the signed-in user's own /me profile carries this; nil (-> false) for everyone else.
     let hasDiscoveryPhone: Bool?
+    // Optional so an older server (no streak field) still decodes; nil -> 0.
+    let streak: Int?
 
     func toUser() -> UserProfile {
         UserProfile(id: id, username: username, displayName: displayName ?? "",
                     rating: rating ?? 1200, avatarColor: avatarColor ?? "#34E5A1",
                     isFriend: isFriend ?? false, discoverable: discoverable ?? true,
-                    imageURL: image, hasDiscoveryPhone: hasDiscoveryPhone ?? false)
+                    imageURL: image, hasDiscoveryPhone: hasDiscoveryPhone ?? false, streak: streak ?? 0)
     }
 }
 
