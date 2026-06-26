@@ -147,3 +147,17 @@ gamesRoutes.post('/:id/resign', async (c) => {
   const [dto] = await dtoFor([updated], me.id);
   return c.json(dto);
 });
+
+// Abort an active game that has no moves yet (e.g. a player backs out before move one). Unlike a
+// resignation there's no winner and no rating change; the opponent just sees "Game aborted".
+gamesRoutes.post('/:id/abort', async (c) => {
+  const me = c.get('user');
+  const g = await requireParticipantGame(me.id, c.req.param('id'));
+  if (g.status !== 'active') apiError(409, 'conflict', 'Game is not active.');
+  if (g.movesUci.length > 0) apiError(409, 'has_moves', 'Game already has moves; resign instead.');
+
+  const updated = await endGame(g.id, 'draw', 'aborted', { aborted: true });
+  emitGameOver(updated.id, null, 'aborted');
+  const [dto] = await dtoFor([updated], me.id);
+  return c.json(dto);
+});
