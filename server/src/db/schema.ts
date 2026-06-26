@@ -31,6 +31,11 @@ export const user = pgTable(
     displayName: text('display_name'),
     phoneHash: text('phone_hash').unique(),
 
+    // Consecutive-day play streak, reported by the client (mirrors the on-device Streak logic) so
+    // friends can see each other's streaks. streakLastPlayedAt drives lapse: served value decays to 0.
+    streakCount: integer('streak_count').notNull().default(0),
+    streakLastPlayedAt: timestamp('streak_last_played_at'),
+
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -205,7 +210,8 @@ export type Termination =
   | 'insufficient'
   | 'fiftyMove'
   | 'repetition'
-  | 'abandoned';
+  | 'abandoned'
+  | 'aborted';
 
 export type UserRow = typeof user.$inferSelect;
 export type GameRow = typeof game.$inferSelect;
