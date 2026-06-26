@@ -27,6 +27,8 @@ extension APIClient {
     }
 
     func me() async throws -> ProfileDTO { try await get("/api/v1/me", as: ProfileDTO.self) }
+    // Best-effort ping so the server tracks the streak friends see; safe to call once per game start.
+    func reportPlayed() async { try? await postVoid("/api/v1/me/played") }
     func patchMe(_ body: PatchMeBody) async throws -> ProfileDTO { try await patch("/api/v1/me", body: body, as: ProfileDTO.self) }
     func setDiscoveryPhone(_ phoneNumber: String, region: String?) async throws -> ProfileDTO {
         try await post("/api/v1/me/discovery-phone", body: DiscoveryPhoneBody(phoneNumber: phoneNumber, region: region), as: ProfileDTO.self)
@@ -74,6 +76,9 @@ extension APIClient {
 
     func games(status: String) async throws -> [GameDTO] { try await get("/api/v1/games?status=\(status)", as: GamesResponse.self).games }
     func game(_ id: String) async throws -> GameDTO { try await get("/api/v1/games/\(id)", as: GameDTO.self) }
+    // Durable game-ending over REST (independent of the live socket), used when leaving a live game.
+    func resignGame(_ id: String) async throws { try await postVoid("/api/v1/games/\(id)/resign") }
+    func abortGame(_ id: String) async throws { try await postVoid("/api/v1/games/\(id)/abort") }
 
     // Shared Game Review for online games. The canonical review is whatever the server already holds, so
     // uploadGameReview returns the stored copy (which may be another player's if they opened it first).
