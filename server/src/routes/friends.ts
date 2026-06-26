@@ -6,6 +6,7 @@ import type { FriendRequestRow, UserRow } from '../db/schema.js';
 import { apiError, requireAuth, type AppEnv } from '../http.js';
 import { areFriends, friendIdsOf, orderPair } from '../lib/friends.js';
 import { toProfile, type Profile } from '../lib/profile-mapper.js';
+import { displayNameOf, notifyFriendAccepted, notifyFriendRequestReceived } from '../push/notify.js';
 
 export const friendsRoutes = new Hono<AppEnv>();
 
@@ -114,6 +115,8 @@ friendsRoutes.post('/requests', async (c) => {
     .limit(1);
   if (reciprocal[0]) {
     await acceptRequest(reciprocal[0]);
+    // I just accepted their pending request, so tell them it was accepted.
+    notifyFriendAccepted(toUserId, displayNameOf(me));
     // They're now friends; don't fall through and create a stale outgoing request.
     return c.json({
       id: reciprocal[0].id,
@@ -145,6 +148,9 @@ friendsRoutes.post('/requests', async (c) => {
         .returning()
     )[0]!;
 
+  // Notify only on a freshly created request, so re-tapping "Add" doesn't re-spam the recipient.
+  if (!existing[0]) notifyFriendRequestReceived(toUserId, displayNameOf(me));
+
   return c.json({
     id: row.id,
     from: toProfile(me, false),
@@ -163,6 +169,7 @@ friendsRoutes.post('/requests/:id/accept', async (c) => {
   if (req!.toUserId !== me.id) apiError(403, 'forbidden', 'Not your request to accept.');
 
   await acceptRequest(req!);
+  notifyFriendAccepted(req!.fromUserId, displayNameOf(me));
   return c.json({ ok: true });
 });
 
