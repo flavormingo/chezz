@@ -27,7 +27,7 @@ enum GameOutcome: Equatable, Codable, Hashable {
 
 enum Termination: String, Codable, Hashable {
     case checkmate, resignation, timeout, stalemate
-    case agreement, insufficientMaterial, fiftyMove, repetition, abandoned
+    case agreement, insufficientMaterial, fiftyMove, repetition, abandoned, aborted
 
     var label: String {
         switch self {
@@ -40,6 +40,7 @@ enum Termination: String, Codable, Hashable {
         case .fiftyMove: return "Fifty-move rule"
         case .repetition: return "Repetition"
         case .abandoned: return "Abandoned"
+        case .aborted: return "Aborted"
         }
     }
 }
@@ -66,6 +67,7 @@ struct ResultSummary: Equatable, Codable {
     var termination: Termination
 
     var headline: String {
+        if termination == .aborted { return "Game aborted" }
         switch outcome {
         case .win(.white): return "White won"
         case .win(.black): return "Black won"
@@ -73,5 +75,5 @@ struct ResultSummary: Equatable, Codable {
         case .ongoing: return ""
         }
     }
-    var subtitle: String { "by \(termination.label.lowercased())" }
+    var subtitle: String { termination == .aborted ? "No moves were played" : "by \(termination.label.lowercased())" }
 }
