@@ -22,7 +22,7 @@ struct ChallengeSheet: View {
                         Avatar(name: friend.name, colorHex: friend.avatarColor, size: 44, imageURL: friend.imageURL.flatMap { URL(string: $0) })
                         VStack(alignment: .leading) {
                             Text(friend.name).font(.chezzHeadline).foregroundStyle(Palette.textPrimary)
-                            Text("@\(friend.username)").font(.chezzCaption).foregroundStyle(Palette.textSecondary)
+                            StreakRatingLabel(streak: friend.streak, rating: friend.rating)
                         }
                         Spacer()
                     }
