@@ -14,6 +14,7 @@ import { apiError, requireAuth, type AppEnv } from '../http.js';
 import { hashPhone, normalizeE164 } from '../lib/hash.js';
 import { selfProfile } from '../lib/profile-mapper.js';
 import { sendEmailChangeCode } from '../lib/resend.js';
+import { afterPlay } from '../lib/streak.js';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -110,6 +111,19 @@ meRoutes.delete('/discovery-phone', async (c) => {
   const [updated] = await db
     .update(userTable)
     .set({ phoneHash: null, discoverable: false, updatedAt: new Date() })
+    .where(eq(userTable.id, me.id))
+    .returning();
+  return c.json(selfProfile(updated!));
+});
+
+// The client pings this whenever it plays a game (any mode) so the server can track the streak that
+// friends see. Server time decides the day boundary, so the count can rise by at most 1 per day.
+meRoutes.post('/played', async (c) => {
+  const me = c.get('user');
+  const r = afterPlay(me.streakCount, me.streakLastPlayedAt, new Date());
+  const [updated] = await db
+    .update(userTable)
+    .set({ streakCount: r.count, streakLastPlayedAt: r.lastPlayed, updatedAt: new Date() })
     .where(eq(userTable.id, me.id))
     .returning();
   return c.json(selfProfile(updated!));
