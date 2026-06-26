@@ -50,6 +50,8 @@ struct FriendsView: View {
         } message: { Text(vm.error ?? "") }
         .task(id: session.isSignedIn) { if session.isSignedIn { await vm.load() } }
         .onChange(of: push.pendingGameId) { _, id in openPushGame(id) }
+        // A tapped friend-request/accept push lands here; reload so the new request/friend shows.
+        .onChange(of: push.pendingFriendsRefresh) { _, _ in Task { await vm.load() } }
         // Once the user adds their number from the prompt, run the match they originally asked for.
         .onChange(of: session.currentUser?.hasDiscoveryPhone) { _, has in
             if has == true, pendingContactMatch {
@@ -180,7 +182,7 @@ struct FriendsView: View {
             Avatar(name: user.name, colorHex: user.avatarColor, size: 40, imageURL: user.imageURL.flatMap { URL(string: $0) })
             VStack(alignment: .leading, spacing: 1) {
                 Text(user.name).font(.chezzCallout).foregroundStyle(Palette.textPrimary)
-                Text("@\(user.username) · \(user.rating)").font(.chezzCaption).foregroundStyle(Palette.textSecondary)
+                StreakRatingLabel(streak: user.streak, rating: user.rating)
             }
             Spacer()
             if user.isFriend || action == .challenge {
@@ -201,9 +203,13 @@ struct FriendsView: View {
     }
 
     private func requestRow(_ req: FriendRequestDTO) -> some View {
-        HStack(spacing: Spacing.sm) {
-            Avatar(name: req.from.toUser().name, colorHex: req.from.avatarColor ?? "#34E5A1", size: 40, imageURL: req.from.image.flatMap { URL(string: $0) })
-            Text(req.from.toUser().name).font(.chezzCallout).foregroundStyle(Palette.textPrimary)
+        let from = req.from.toUser()
+        return HStack(spacing: Spacing.sm) {
+            Avatar(name: from.name, colorHex: req.from.avatarColor ?? "#34E5A1", size: 40, imageURL: req.from.image.flatMap { URL(string: $0) })
+            VStack(alignment: .leading, spacing: 1) {
+                Text(from.name).font(.chezzCallout).foregroundStyle(Palette.textPrimary)
+                StreakRatingLabel(streak: from.streak, rating: from.rating)
+            }
             Spacer()
             Button { Task { await vm.acceptRequest(req.id) } } label: {
                 Image(systemName: "checkmark").foregroundStyle(Palette.onAccent)
