@@ -70,6 +70,26 @@ export function notifyChallengeAccepted(toUserId: string, byName: string, gameId
   );
 }
 
+export function notifyFriendRequestReceived(toUserId: string, fromName: string): void {
+  fire(
+    sendToUser(
+      toUserId,
+      { title: 'Friend request', body: `${fromName} sent you a friend request.` },
+      { type: 'friendRequest' },
+    ),
+  );
+}
+
+export function notifyFriendAccepted(toUserId: string, byName: string): void {
+  fire(
+    sendToUser(
+      toUserId,
+      { title: 'Friend request accepted', body: `${byName} accepted your friend request.` },
+      { type: 'friendAccepted' },
+    ),
+  );
+}
+
 export function notifyTurnIfCorrespondence(game: GameRow): void {
   if (game.kind !== 'correspondence' || game.status !== 'active') return;
   const turn = turnFor(game.movesUci);
