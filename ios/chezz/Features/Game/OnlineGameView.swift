@@ -8,6 +8,7 @@ struct OnlineGameView: View {
 
     @State private var showResign = false
     @State private var showSettings = false
+    @State private var showLeaveConfirm = false
 
     var body: some View {
         ZStack {
@@ -57,11 +58,34 @@ struct OnlineGameView: View {
             Button("Resign", role: .destructive) { vm.resign() }
             Button("Cancel", role: .cancel) {}
         }
+        // Leaving a live game ends it: an abort before move one, a resignation after.
+        .confirmationDialog(leaveTitle, isPresented: $showLeaveConfirm, titleVisibility: .visible) {
+            Button(leaveActionLabel, role: .destructive) {
+                Task { await vm.leaveGame(); onExit() }
+            }
+            Button("Keep playing", role: .cancel) {}
+        }
+    }
+
+    // A timed, still-live game forfeits on leave (confirm first); otherwise leaving just closes the view.
+    private func handleLeave() {
+        if vm.leavingForfeits {
+            showLeaveConfirm = true
+        } else {
+            vm.stop()
+            onExit()
+        }
+    }
+    private var leaveTitle: String {
+        vm.leaveIsAbort ? "Leave this game?" : "Leave? This counts as a resignation."
+    }
+    private var leaveActionLabel: String {
+        vm.leaveIsAbort ? "Leave" : "Resign & leave"
     }
 
     private var toolbar: some View {
         HStack {
-            Button { vm.stop(); onExit() } label: {
+            Button { handleLeave() } label: {
                 Image(systemName: "xmark").font(.headline).foregroundStyle(Palette.textSecondary)
                     .frame(width: 36, height: 36).background(Palette.surface2, in: Circle())
             }
