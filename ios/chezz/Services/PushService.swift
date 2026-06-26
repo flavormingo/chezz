@@ -10,6 +10,8 @@ final class PushService: NSObject {
 
     var pendingGameId: String?
     var wantsFriendsTab = false
+    // Bumped when a friend-request/accept push is tapped, so FriendsView reloads its (stale) lists.
+    var pendingFriendsRefresh = 0
 
     private var deviceTokenHex: String?
     private var uploadedToken: String?
@@ -65,6 +67,9 @@ final class PushService: NSObject {
     fileprivate func handleTap(_ userInfo: [AnyHashable: Any]) {
         wantsFriendsTab = true
         if let gameId = userInfo["gameId"] as? String { pendingGameId = gameId }
+        if let type = userInfo["type"] as? String, type == "friendRequest" || type == "friendAccepted" {
+            pendingFriendsRefresh += 1
+        }
     }
 }
 
