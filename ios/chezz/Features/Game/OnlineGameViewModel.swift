@@ -69,6 +69,7 @@ final class OnlineGameViewModel: Identifiable {
 
     func start() async {
         settings.recordPlayedToday()
+        Task { await APIClient.shared.reportPlayed() }   // propagate the streak to friends
         streamTask?.cancel()
         clockTask?.cancel()
         watchdog?.cancel()
@@ -162,6 +163,19 @@ final class OnlineGameViewModel: Identifiable {
 
     func resign() { Task { await socket.resign(gameId: gameId) } }
     func flip() { perspective = perspective.opposite }
+
+    // True only while a timed game is live; leaving such a game forfeits it (see leaveGame()).
+    var leavingForfeits: Bool { statusActive && isTimed }
+    // Before any move, leaving aborts (no result/rating hit); after a move it counts as a resignation.
+    var leaveIsAbort: Bool { game.history.isEmpty }
+
+    // Leave a live game: disconnect first so we don't briefly receive (and flash) our own game-over,
+    // then end it server-side over REST, which is durable regardless of the socket teardown.
+    func leaveGame() async {
+        stop()
+        if leaveIsAbort { try? await api.abortGame(gameId) }
+        else { try? await api.resignGame(gameId) }
+    }
 
     private func clearSelection() { selectedSquare = nil; legalTargets = [] }
 
@@ -260,6 +274,7 @@ final class OnlineGameViewModel: Identifiable {
         case "insufficient", "insufficientMaterial": term = .insufficientMaterial
         case "fiftyMove": term = .fiftyMove
         case "repetition": term = .repetition
+        case "aborted": term = .aborted
         default: term = .abandoned
         }
         return ResultSummary(outcome: outcome, termination: term)
