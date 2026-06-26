@@ -1,4 +1,5 @@
 import type { UserRow } from '../db/schema.js';
+import { currentStreak } from './streak.js';
 
 export interface Profile {
   id: string;
@@ -10,6 +11,7 @@ export interface Profile {
   createdAt: string;
   isFriend: boolean;
   discoverable: boolean;
+  streak: number;
 }
 
 export function toProfile(u: UserRow, isFriend: boolean): Profile {
@@ -24,6 +26,8 @@ export function toProfile(u: UserRow, isFriend: boolean): Profile {
     createdAt: u.createdAt.toISOString(),
     isFriend,
     discoverable: u.discoverable,
+    // Lapse-aware: a stale streak decays to 0 on read, so friends never see an out-of-date number.
+    streak: currentStreak(u.streakCount, u.streakLastPlayedAt, new Date()),
   };
 }
 
