@@ -11,10 +11,12 @@ struct UserProfile: Identifiable, Codable, Hashable {
     var imageURL: String?
     // True once the user has added a discoverable phone number; drives the honest "Findable" state.
     var hasDiscoveryPhone: Bool
+    // Lapse-aware consecutive-day play streak from the server (0 when none or lapsed).
+    var streak: Int
 
     init(id: String, username: String, displayName: String = "", rating: Int = 1200,
          avatarColor: String = "#34E5A1", isFriend: Bool = false, discoverable: Bool = true,
-         imageURL: String? = nil, hasDiscoveryPhone: Bool = false) {
+         imageURL: String? = nil, hasDiscoveryPhone: Bool = false, streak: Int = 0) {
         self.id = id
         self.username = username
         self.displayName = displayName
@@ -24,6 +26,7 @@ struct UserProfile: Identifiable, Codable, Hashable {
         self.discoverable = discoverable
         self.imageURL = imageURL
         self.hasDiscoveryPhone = hasDiscoveryPhone
+        self.streak = streak
     }
 
     var name: String {
