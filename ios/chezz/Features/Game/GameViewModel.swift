@@ -31,6 +31,7 @@ final class GameViewModel: Identifiable {
 
     func start() {
         settings.recordPlayedToday()
+        Task { await APIClient.shared.reportPlayed() }   // propagate the streak to friends
         game.begin()
         maybeAIMove()
     }
