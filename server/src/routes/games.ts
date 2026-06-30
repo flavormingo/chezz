@@ -110,6 +110,7 @@ gamesRoutes.post('/:id/move', async (c) => {
 gamesRoutes.get('/:id/review', async (c) => {
   const me = c.get('user');
   const g = await requireParticipantGame(me.id, c.req.param('id'));
+  console.log(`[review] GET game=${g.id.slice(0, 8)} present=${g.review != null}`);
   return c.json({ review: g.review ?? null });
 });
 
@@ -117,6 +118,9 @@ gamesRoutes.post('/:id/review', async (c) => {
   const me = c.get('user');
   const id = c.req.param('id');
   const g = await requireParticipantGame(me.id, id);
+  console.log(
+    `[review] POST game=${id.slice(0, 8)} user=${me.id.slice(0, 6)} status=${g.status} hadReview=${g.review != null}`,
+  );
   if (g.status === 'active') apiError(409, 'conflict', 'Game is not finished.');
 
   const body = await c.req.json().catch(() => ({}));
