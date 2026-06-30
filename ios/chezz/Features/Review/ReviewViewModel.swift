@@ -70,24 +70,39 @@ final class ReviewViewModel: Identifiable {
     var plyCount: Int { history.count }
 
     func load() async {
-        // 1. Already computed on this device (persisted) — instant and stable.
-        if let cacheKey, let cached = ReviewCache.shared.review(for: cacheKey) {
-            finish(with: cached)
+        if let serverGameId {
+            // Online games share one canonical review via the server. The server wins over any local
+            // cache (so a device that once cached its own local analysis still converges), and after
+            // publishing we re-read the stored copy rather than trusting our POST — that way the loser
+            // of a simultaneous publish lands on the winner's review instead of its own.
+            if let remote = try? await APIClient.shared.gameReview(serverGameId) {
+                finish(with: remote)
+                return
+            }
+            let mine: GameReview
+            if let cached = cachedReview() { mine = cached } else { mine = await computeReview() }
+            if !mine.engineUnavailable {
+                _ = try? await APIClient.shared.uploadGameReview(serverGameId, mine)
+                if let canonical = try? await APIClient.shared.gameReview(serverGameId) {
+                    finish(with: canonical)
+                    return
+                }
+            }
+            finish(with: mine)   // offline / server unreachable: best-effort local, reconciles next open
             return
         }
-        // 2. Online games: use the shared review if a participant has already computed one.
-        if let serverGameId, let remote = try? await APIClient.shared.gameReview(serverGameId) {
-            finish(with: remote)
-            return
-        }
-        // 3. Compute locally, then (for online games) publish it so the opponent sees the same one.
-        let computed = await engine.run(history: history, startFEN: startFEN, result: result,
-                                        progress: { p in Task { @MainActor in self.progress = p } })
-        var canonical = computed
-        if let serverGameId, !computed.engineUnavailable {
-            canonical = (try? await APIClient.shared.uploadGameReview(serverGameId, computed)) ?? computed
-        }
-        finish(with: canonical)
+        // Local games: a cached result is stable, otherwise compute once.
+        if let cached = cachedReview() { finish(with: cached) } else { finish(with: await computeReview()) }
+    }
+
+    private func cachedReview() -> GameReview? {
+        guard let cacheKey else { return nil }
+        return ReviewCache.shared.review(for: cacheKey)
+    }
+
+    private func computeReview() async -> GameReview {
+        await engine.run(history: history, startFEN: startFEN, result: result,
+                         progress: { p in Task { @MainActor in self.progress = p } })
     }
 
     private func finish(with r: GameReview) {
