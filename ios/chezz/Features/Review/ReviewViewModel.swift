@@ -101,8 +101,10 @@ final class ReviewViewModel: Identifiable {
     }
 
     private func computeReview() async -> GameReview {
+        // Each analyzed position reports progress from a background task; those can land out of order,
+        // so clamp to be monotonic — otherwise the bar visibly jitters backward as it fills.
         await engine.run(history: history, startFEN: startFEN, result: result,
-                         progress: { p in Task { @MainActor in self.progress = p } })
+                         progress: { p in Task { @MainActor in self.progress = max(self.progress, p) } })
     }
 
     private func finish(with r: GameReview) {
