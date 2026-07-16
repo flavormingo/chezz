@@ -2,6 +2,12 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppSettings.self) private var settings
+    @Environment(SessionStore.self) private var session
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var showDeleteConfirm = false
+    @State private var deleting = false
+    @State private var deleteError: String?
 
     var body: some View {
         @Bindable var settings = settings
@@ -51,10 +57,45 @@ struct SettingsView: View {
                     .font(.chezzCaption).foregroundStyle(Palette.textSecondary)
             }
             .listRowBackground(Palette.surface)
+
+            // Account deletion (App Store privacy requirement). Only shown when there's an account.
+            if session.isSignedIn {
+                Section("Danger") {
+                    Button(role: .destructive) { showDeleteConfirm = true } label: {
+                        HStack {
+                            Label("Delete Account", systemImage: "trash")
+                            if deleting { Spacer(); ProgressView() }
+                        }
+                    }
+                    .disabled(deleting)
+                }
+                .listRowBackground(Palette.surface)
+            }
         }
         .scrollContentBackground(.hidden)
         .background(Palette.canvas)
         .navigationTitle("Settings")
         .tint(Palette.mint)
+        .alert("Delete Account?", isPresented: $showDeleteConfirm) {
+            Button("Delete Account", role: .destructive) { Task { await performDelete() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This permanently deletes your account and all your data, including your profile, friends, and games. This can't be undone.")
+        }
+        .alert("Couldn't delete account", isPresented: Binding(
+            get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: { Text(deleteError ?? "") }
+    }
+
+    private func performDelete() async {
+        deleting = true
+        defer { deleting = false }
+        do {
+            try await session.deleteAccount()
+            dismiss()
+        } catch {
+            deleteError = error.localizedDescription
+        }
     }
 }
