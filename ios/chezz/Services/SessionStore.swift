@@ -84,4 +84,13 @@ final class SessionStore {
         await api.signOutRemote()
         currentUser = nil
     }
+
+    // Permanently delete the account, then tear down the local session. Only touches local state on
+    // success, so a failed delete (e.g. offline) leaves the user signed in with a surfaced error.
+    func deleteAccount() async throws {
+        try await api.deleteAccount()
+        await PushService.shared.onSignedOut()
+        await api.setToken(nil)
+        currentUser = nil
+    }
 }
