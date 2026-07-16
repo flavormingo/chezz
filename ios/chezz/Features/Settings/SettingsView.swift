@@ -63,7 +63,7 @@ struct SettingsView: View {
                 Section("Danger") {
                     Button(role: .destructive) { showDeleteConfirm = true } label: {
                         HStack {
-                            Label("Delete Account", systemImage: "trash")
+                            Text("Delete Account")
                             if deleting { Spacer(); ProgressView() }
                         }
                     }
