@@ -80,7 +80,7 @@ struct SettingsView: View {
             Button("Delete Account", role: .destructive) { Task { await performDelete() } }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This permanently deletes your account and all your data, including your profile, friends, and games. This can't be undone.")
+            Text("This permanently deletes your account and all your data, including your profile, friends and games. This can't be undone.")
         }
         .alert("Couldn't delete account", isPresented: Binding(
             get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
