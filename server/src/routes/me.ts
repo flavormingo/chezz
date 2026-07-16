@@ -1,5 +1,5 @@
 import { randomInt, randomUUID } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
@@ -23,6 +23,21 @@ export const meRoutes = new Hono<AppEnv>();
 meRoutes.use('*', requireAuth);
 
 meRoutes.get('/', (c) => c.json(selfProfile(c.get('user'))));
+
+// Permanently delete the signed-in user's account and all of their data (App Store requirement).
+// FK cascades remove sessions, accounts, friendships, friend requests, challenges and device tokens;
+// finished games are kept but their player reference is set to null (no identity remains).
+meRoutes.delete('/', async (c) => {
+  const me = c.get('user');
+  for (const ext of ['jpg', 'png']) {
+    await rm(path.join(env.uploadDir, `${me.id}.${ext}`)).catch(() => {}); // best-effort avatar cleanup
+  }
+  await db
+    .delete(verificationTable)
+    .where(eq(verificationTable.identifier, `change-email:${me.id}`));
+  await db.delete(userTable).where(eq(userTable.id, me.id));
+  return c.json({ ok: true });
+});
 
 meRoutes.patch('/', async (c) => {
   const me = c.get('user');
