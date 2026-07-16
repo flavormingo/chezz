@@ -27,6 +27,8 @@ extension APIClient {
     }
 
     func me() async throws -> ProfileDTO { try await get("/api/v1/me", as: ProfileDTO.self) }
+    // Permanently deletes the signed-in user's account and all their data.
+    func deleteAccount() async throws { try await deleteVoid("/api/v1/me") }
     // Best-effort ping so the server tracks the streak friends see; safe to call once per game start.
     func reportPlayed() async { try? await postVoid("/api/v1/me/played") }
     func patchMe(_ body: PatchMeBody) async throws -> ProfileDTO { try await patch("/api/v1/me", body: body, as: ProfileDTO.self) }
